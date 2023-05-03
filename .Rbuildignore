@@ -1,0 +1,5 @@
+
+^dev$
+^LICENSE\.md$
+^eq\.mtx\.Rproj$
+^\.Rproj\.user$

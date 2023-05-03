@@ -1,0 +1,28 @@
+Package: eq.mtx
+Title: A Package With New Functions To Run EQM Algorithm
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Lima", "Bruno", , "balima78@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-9090-4457")),
+    person("TxOR", role = "cph")
+  )
+Description: Here I will test fucntions to run the eqm algorithm before I
+    pass them to {histoc}.
+License: MIT + file LICENSE
+Depends: 
+    R (>= 2.10)
+Imports: 
+    data.table,
+    dplyr,
+    purrr
+Suggests: 
+    histoc,
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: 
+    knitr
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.0

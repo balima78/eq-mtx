@@ -2,7 +2,7 @@ library(tidyverse)
 library(simK)
 
 
-cds <- candidates_df(n = 2000) %>%
+cds <- simK::candidates_df(n = 2000) %>%
   select(ID, bg, A1, A2, B1, B2, DR1, DR2, age, dialysis, cPRA, urgent)
 dns <- donors_df(n = 50)
 ant <- Abs_df(candidates =cds)
@@ -104,3 +104,20 @@ lima(iso = TRUE
                  , cPRA1 = 50
                  , cPRA2 = 85
                  , check.validity = TRUE)
+library(histoc)
+data("ant")
+eq.mtx::eqm(
+iso = iso,
+dABO = dABO,
+dA = dA,
+dB = dB,
+dDR = dDR,
+donor.age = donor.age,
+df.abs = ant,
+data = candidates,
+n = 6,
+q2 = q2,
+q3 = q3,
+uj.matx = eq.mtx::uj_matx()
+)
+

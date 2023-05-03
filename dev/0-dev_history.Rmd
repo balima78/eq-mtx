@@ -1,0 +1,126 @@
+---
+title: "Development actions history"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+All commands that you use to use when developing packages...
+
+# First time just after creating the project
+
+- Fill the following chunk to create the DESCRIPTION of your package
+
+```{r description, eval=FALSE}
+# Describe your package
+fusen::fill_description(overwrite = F,
+  pkg = here::here(),
+  fields = list(
+    Title = "A package with new functions to run EQM algorithm",
+    Description = "Here I will test fucntions to run the eqm algorithm before I pass them to {histoc}",
+    `Authors@R` = c(
+      person("Lima", "Bruno", email = "balima78@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-9090-4457")),
+      person(given = "TxOR", role = "cph")
+    )
+  )
+)
+# Define License with use_*_license()
+usethis::use_mit_license("")
+```
+
+# Start using git
+
+```{r, eval=FALSE}
+usethis::use_git()
+# Deal with classical files to ignore
+usethis::git_vaccinate()
+# Use main for primary branch
+usethis::git_default_branch_rename()
+```
+
+# Set extra sources of documentation
+
+```{r, eval=FALSE}
+# Install a first time
+remotes::install_local()
+# README
+usethis::use_readme_rmd()
+# Code of Conduct
+usethis::use_code_of_conduct("balima78@gmail.com")
+# NEWS
+usethis::use_news_md()
+```
+
+# Including datasets
+
+to include datasets we need the package to already be built; only once the package exists can we include data sets. 
+
+```{r}
+local({
+  cds <- simK::candidates_df(n = 2000) |>
+  dplyr::select(ID, bg, A1, A2, B1, B2, DR1, DR2, age, dialysis, cPRA, urgent)
+#dns <- simK::donors_df(n = 280)
+#ant <-  simK::Abs_df(candidates =cds)
+  
+  # usethis::use_data(cds, overwrite = TRUE)
+  # usethis::use_data(dns, overwrite = TRUE)
+  #usethis::use_data(ant, overwrite = TRUE)
+})
+
+```
+
+**From now, you will need to "inflate" your package at least once to be able to use the following commands. Let's go to your flat template, and come back here later if/when needed.**
+
+
+# Package development tools
+## Use once
+
+```{r, eval=FALSE}
+# Pipe
+usethis::use_pipe()
+
+# package-level documentation
+usethis::use_package_doc()
+
+# GitHub
+# Add your credentials for GitHub
+gitcreds::gitcreds_set()
+# Send your project to a new GitHub project
+usethis::use_github()
+
+# Set Continuous Integration
+# _GitHub
+usethis::use_github_action_check_standard()
+usethis::use_github_action("pkgdown")
+usethis::use_github_action("test-coverage")
+# _GitLab
+gitlabr::use_gitlab_ci(type = "check-coverage-pkgdown")
+
+# Add new flat template
+fusen::add_flat_template("add")
+```
+
+## Use everytime needed
+
+```{r}
+# Simulate package installation
+pkgload::load_all()
+
+# Generate documentation and deal with dependencies
+attachment::att_amend_desc()
+
+# Check the package
+devtools::check()
+```
+
+# Share the package
+
+```{r}
+# set and try pkgdown documentation website
+usethis::use_pkgdown()
+pkgdown::build_site()
+
+# build the tar.gz with vignettes to share with others
+devtools::build(vignettes = TRUE)
+```
+

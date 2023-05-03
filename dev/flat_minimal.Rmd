@@ -1,0 +1,483 @@
+---
+title: "Funções para acrescentar ao {histoc}"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r development, include=FALSE}
+library(testthat)
+```
+
+<!--
+ You need to run the 'description' chunk in the '0-dev_history.Rmd' file before continuing your code there.
+-->
+
+```{r development-load}
+# Load already included functions if relevant
+pkgload::load_all(export_all = FALSE)
+```
+
+# uj_matx
+
+```{r function-uj_matx}
+#' Utility - Justice matrix
+#'
+#' @description Creates a matrix with scores for utility and justice criteria on organ transplantation
+#' @param max.val A numerical value corresponding o the matrix maximum value. 
+#' @param ratio.util A numerical value between 0 and 0.5 corresponding to the decreasing rate for the utility criterion (by column)
+#' @param ratio.just A numerical value between 0 and 0.5 corresponding to the decreasing rate for the justice criterion (by column)
+#' @return A 6 by 6 matrix with at line 1 row 1 has the maximum value and at line 6, row 6 has it's minimum.
+#' @export
+uj_matx <- function(max.val = 100,
+                    ratio.util = 0.1,
+                    ratio.just = 0.1){
+  
+  if(!(ratio.just > 0 & ratio.just < 0.5 & 
+       ratio.util > 0 & ratio.util < 0.5)
+     ){stop('ratio values are not between 0 and 0.5!')}
+  
+  if(!(max.val > 0)){stop('max.val is not greater than 0!')} 
+  
+  matx <- matrix(nrow = 6,
+                 ncol = 6)
+  # rownames(matx) <- c('a','b','c','d','e','f')
+  # colnames(matx) <- c('a','b','c','d','e','f')
+  
+  util.val <- max.val * ratio.util
+  just.val <- max.val * ratio.just
+  
+  l1 <- max.val
+  for(i in 1:5){l1 <- c(l1,max.val - util.val*i)}
+  c1 <- max.val
+  for(i in 1:5){c1 <- c(c1,max.val - just.val*i)}
+  
+  matx[1,] <- l1
+  matx[,1] <- c1 
+  
+  for(i in 2:6){
+    for(j in 2:6){
+      matx[i,j] <- matx[i, j-1] - util.val
+      }
+  }
+  
+  if( is.na(sum(matx)) | is.nan(sum(matx)) ){stop("The matrix have non valid numbers!")}
+
+  matx0 <- matrix(0, ncol = 6, nrow = 6)
+  # rownames(matx0) <- c('a','b','c','d','e','f')
+  # colnames(matx0) <- c('a','b','c','d','e','f')
+  if(identical(matx,matx0) ){stop("All matrix values are zeros!")}
+  
+  return(matx)
+}
+```
+
+```{r examples-uj_matx, eval = FALSE}
+#' \dontrun{
+#' uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.1)
+```
+
+```{r tests-uj_matx}
+test_that("test uj_matx", {
+  
+  mat_test <- matrix(c(100, 90, 80, 70, 60, 50,
+                       90, 80, 70, 60, 50, 40,
+                       80, 70, 60, 50, 40, 30,
+                       70, 60, 50, 40, 30, 20,
+                       60, 50, 40, 30, 20, 10,
+                       50, 40, 30, 20, 10, 0),
+                     nrow = 6,
+                     byrow = T)
+  
+  expect_equal(uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.1),
+               mat_test)
+  
+  expect_error(uj_matx(max.val = 0))
+  expect_error(uj_matx(max.val = 'A'))
+  
+  expect_error(uj_matx(ratio.util = 0.6))
+  expect_error(uj_matx(ratio.util = 0))
+  
+  expect_error(uj_matx(just.util = 0.6))
+  expect_error(uj_matx(just.util = 0))
+  
+})
+```
+
+
+# eqm
+
+```{r function-eqm}
+#' Equity matrix algorithm
+#'
+#' @description An algorithm to apply on deceased donor's Kidney allocation for transplantation.
+#' Ordering of wait listed candidates for a given donor and according to and utility-justice matrix.
+#' @param iso A logical value for ABO isogroupal compatibility.
+#' @param dABO A character value with donor's ABO blood group (`r env$valid.blood.groups`).
+#' @param dA A two elements character vector donor's HLA-A typing.
+#' @param dB A two elements character vector donor's HLA-B typing.
+#' @param dDR A two elements character vector donor's HLA-DR typing.
+#' @param donor.age A numeric value with donor's age.
+#' @param data A data frame containing demographics and medical information
+#' for a group of waitlisted transplant candidates.
+#' @param df.abs A data frame with candidates' antibodies.
+#' @param n A positive integer to slice the first candidates.
+#' @param q2 A numerical value for the median of candidates' waiting list (`r env$q.minimum` - `r env$q.maximum`).
+#' @param q3 A numerical value for the third quartile of candidates' waiting list (`r env$q.minimum` - `r env$q.maximum`).
+#' @param uj.matx A 6 by 6 matrix obtained from \code{uj_matx()}
+#' @param check.validity Logical to decide whether to validate input arguments.
+#' @importFrom data.table setDT fcase `:=`
+#' @return An ordered data frame with a column \code{pts} (points from utility-justice matrix), \code{SP}, \code{HI} and \code{mmHLA}.
+#' @export
+eqm <- function(iso = TRUE
+                , dABO = "O"
+                , dA = c("1","2"), dB = c("15","44"), dDR = c("1","4")
+                , donor.age = 60
+                , df.abs = cabs
+                , data = candidates
+                , n = 2
+                , q2 = 60
+                , q3 = 80
+                , uj.matx = uj_matx()
+                , check.validity = FALSE){
+  
+  # if(check.validity){
+  #   histoc:::candidate_dataframe_check(data)
+  # }
+  # age_checker(donor.age)
+  # blood_group_checker(dABO)
+  
+  if(q2 >= q3){
+    stop("q2 should be smaller than q3. q2 was ", q2, " and q3 was ", q3)
+  }
+  if(q2 < 1 || q3 < 1 || q2 > 120 || q3 > 120){
+    #q2 < env$q.minimum || q3 < env$q.minimum || q2 > env$q.maximum || q3 > env$q.maximum){
+    #stop("q2 and q3 should be bigger or equal to ", env$q.minimum, " an smaller or equal to ", env$q.maximum)
+    stop("check q2 and q3 values!")
+  }
+  
+  if(!is.numeric(n) | n < 0){stop('n must be an positive number!')}
+  n <- floor(n)
+  if(n == 0) n <- nrow(data)
+  #n <- max(1, n)
+  
+  xm <- xmatch(dA = dA, dB = dB, dDR = dDR, df.abs = df.abs)
+  
+  data.table::setDT(data, key = 'ID')
+  data.table::setDT(xm, key = 'ID')
+  
+  data[, ID := as.character(ID)]
+  xm[, ID := as.character(ID)]
+  
+  data <- merge(data, xm,
+                by = 'ID',
+                all.x = TRUE)
+  
+  data[, `:=`(
+    donor_age = donor.age,
+    SP = ifelse(sp(donor.age = donor.age, candidate.age = age) == 1, 1, 0),
+    HI = hiper(cPRA = cPRA, 85),
+    compBlood = abo(iso = iso, dABO = dABO, cABO = bg)
+    ), by = 'ID'][, row_n := 1:nrow(data)]
+  
+  l <- list()
+  
+  for (i in 1:nrow(data)){
+    res <- mmHLA(dA = dA,
+                 dB = dB,
+                 dDR = dDR,
+                 cA = c(data$A1[i], data$A2[i]),
+                 cB = c(data$B1[i], data$B2[i]),
+                 cDR = c(data$DR1[i], data$DR2[i])
+    )
+    l <- append(l, res)
+    }
+  
+  data[, `:=`(
+    mmA = unlist(l[(1 + (row_n - 1) * 4)]),
+    mmB = unlist(l[2 + (row_n - 1) * 4]),
+    mmDR = unlist(l[3 + (row_n - 1) * 4]),
+    mmHLA = unlist(l[4 + (row_n - 1) * 4])
+  )]
+  
+  
+  data[, `:=` (co = data.table::fcase(abs(donor_age - age) < 9 &  mmHLA <3 , 1,
+                                      abs(donor_age - age) < 9 &  mmHLA <5 , 2,
+                                      abs(donor_age - age) >= 9 &  mmHLA <3 , 3,
+                                      abs(donor_age - age) < 9 &  mmHLA >4 , 4,
+                                      abs(donor_age - age) >= 9 &  mmHLA <5 , 5,
+                                      abs(donor_age - age) >= 9 &  mmHLA >4 , 6),
+               ro = data.table::fcase(dialysis > q3 & cPRA > 50 , 1,
+                                      dialysis > q3 & cPRA <= 50 , 2,
+                                      dialysis > q2 & cPRA > 50 , 3,
+                                      dialysis > q2 & cPRA <= 50 , 4,
+                                      dialysis <= q2 & cPRA > 50 , 5,
+                                      dialysis <= q2 & cPRA <= 50 , 6)
+             ),
+       by = 'ID'][, pts:= uj_matx()[co,ro], by = 'ID']
+
+
+  return(
+    data[compBlood == TRUE & (xm == 'NEG' | is.na(xm)),]
+    [order(-SP, -pts, mmHLA, -dialysis)]
+    [1:n]
+    [!is.na(ID),]
+  )
+  
+}
+```
+
+```{r examples-eqm, eval = FALSE}
+#' \dontrun{
+#' eqm <- function(iso = TRUE, dABO = "O" , 
+#' dA = c("1","2"), dB = c("15","44"), dDR = c("1","4") , 
+#' donor.age = 60 , df.abs = cabs , data = candidates , 
+#' n = 2 , q2 = 60 , q3 = 80 , uj.matx = uj_matx(), 
+#' check.validity = FALSE)
+```
+
+```{r tests-eqm}
+test_that("test eqm", {
+  
+    iso = TRUE
+    dABO = "O"
+    dA = c("1","2")
+    dB = c("15","44")
+    dDR = c("1","4")
+    donor.age = 60
+    n = 2
+    q2 = 60
+    q3 = 100
+    cPRA1 = 50
+    cPRA2 = 85
+    
+    candidates <- data.frame(
+        ID = c('K1', 'K2', 'K3', 'K4', 'K5', 'K6'),
+        bg = c('O', 'O', 'A', 'B', 'AB', 'O'),
+        A1 = c('2', '2', '2', '2', '2', '2'),
+        A2 = c('29', '33', '33', '33', '33', '33'),
+        B1 = c('44', '15', '15', '15', '15', '15'),
+        B2 = c('44', '27', '27', '27', '27', '27'),
+        DR1 = c('4', '11', '11', '11', '11', '11'),
+        DR2 = c('12', '7', '7', '7', '7', '7'),
+        age = c(58, 55, 50, 65, 65, 65),
+        dialysis = c(0, 0, 0, 0, 0, 101),
+        cPRA = c(86, 86, 51, 51, 49, 51),
+        urgent = c(0, 0, 0, 0, 0, 0)
+    )
+
+    results <- data.frame(
+        ID = c('K6', 'K1', 'K2'),
+        bg = c('O', 'O', 'O'),
+        A1 = c('2', '2', '2'),
+        A2 = c('33', '29', '33'),
+        B1 = c('15', '44', '15'),
+        B2 = c('27', '44', '27'),
+        DR1 = c('11', '4', '11'),
+        DR2 = c('7', '12', '7'),
+        age = c(65, 58, 55),
+        dialysis = c(101, 0, 0),
+        cPRA = c(51, 86, 86),
+        urgent = c(0,0,0),
+        #xm= c(NA, NA, NA),
+        donor_age = c(60, 60, 60),
+        SP = c(0,0,0),
+        HI = c(FALSE, TRUE, TRUE),
+        compBlood = c(TRUE, TRUE, TRUE),
+        row_n = c(6,1,2),
+        
+        mmA = c(1, 1, 1),
+        mmB = c(1, 1, 1),
+        mmDR = c(2, 1, 2),
+        mmHLA = c(4, 3, 4),
+        
+        co = c(2,2,2),
+        ro = c(1,5,5),
+        pts = c(90, 50, 50)
+    )
+
+    library(histoc)
+    
+    expect_equivalent(
+      eqm(iso = iso,
+            dABO = dABO,
+            dA = dA,
+            dB = dB,
+            dDR = dDR,
+            donor.age = donor.age,
+            df.abs = ant,
+            data = candidates,
+            n = 6,
+            q2 = q2,
+            q3 = q3,
+            uj.matx = uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.1)
+            )[, xm:=NULL][] 
+      ,
+      results
+    )
+    
+})
+```
+
+## donor_recipient_pairs_v2
+
+```{r function-donor_recipient_pairs_v2}
+#' Candidates' selection according to any algorithm for multiple donors
+#'
+#' @description Ordering of waitlisted candidates for a each donor in a pool of donors and
+#' according to any algorithm.
+#' @param df.donors A data frame containing demographics and medical information
+#' for a pool of donors. For `uk` algorithm must have their respective columns.
+#' @param df.candidates A data frame containing demographics and medical information
+#' for a group of waitlisted transplant candidates. For `uk` algorithm must have respective columns.
+#' @param df.abs A data frame with candidates' antibodies.
+#' @param algorithm The name of the function to use. Valid options are:
+#' \code{lima}, \code{et}, \code{pts}, \code{uk} (without quotation)
+#' @param n A positive integer to slice the first candidates.
+#' @param check.validity Logical to decide whether to validate input arguments.
+#' @param ... all the parameters used on the algorithm function.
+#' @return A list with the number of elements equal to the number of rows on donors' data frame.
+#' Each element have a data frame with selected candidates by donor.
+#' @export
+donor_recipient_pairs_v2 <- function(df.donors = donors,
+                            df.candidates = candidates,
+                            df.abs = cabs,
+                            algorithm = lima,
+                            n = 2,
+                            check.validity = TRUE, ...){
+
+  if(!is.numeric(n)){
+    stop("'n' is not a valid numeric value!")
+  }
+
+  if(!identical(algorithm, uk) && !identical(algorithm, lima) && !identical(algorithm, pts) && !identical(algorithm, et) && !identical(algorithm, eqm)){
+    stop("The algorithm doesn't exist.")
+  }
+
+  if(check.validity){
+    if(identical(algorithm, uk)){
+      uk_candidate_dataframe_check(df.candidates)
+    }
+    else{
+      candidate_dataframe_check(df.candidates)
+    }
+  }
+
+  df.donors <- df.donors |>
+    dplyr::mutate(dABO = bg,
+                  dA = purrr::map2(.x = A1,
+                                   .y = A2,
+                                   ~c(.x,.y)),
+                  dB = purrr::map2(.x = B1,
+                                   .y = B2,
+                                   ~c(.x,.y)),
+                  dDR = purrr::map2(.x = DR1,
+                                    .y = DR2,
+                                    ~c(.x,.y)),
+                  donor.age = age
+    ) |>
+    dplyr::select(dABO, dA, dB, dDR, donor.age)
+
+  #if(n == 0) n <- nrow(df.candidates)
+  if(!is.numeric(n) | n < 0){stop('n must be an positive number!')}
+  n <- floor(n)
+  if(n == 0) n <- nrow(df.candidates)
+
+  lst <- purrr::pmap(df.donors,
+                     data = df.candidates,
+                     df.abs = df.abs,
+                     algorithm,
+                     n = n,
+                     ...)
+
+  names(lst) <- df.donors$ID
+
+  return(lst)
+}
+```
+
+```{r examples-donor_recipient_pairs_v2, eval = FALSE}
+#' \dontrun{
+#' donor_recipient_pairs_v2(df.donors = donors,
+#' df.candidates = candidates,
+#' df.abs = cabs,
+#' algorithm = lima,
+#' n = 2,
+#' check.validity = TRUE)
+#' }
+```
+
+```{r tests-donor_recipient_pairs_v2}
+test_that("test donor_recipient_pairs_v2", {
+
+})
+```
+
+## Included datasets
+
+```{r function-cds, eval = FALSE}
+#' transplant candidates
+#'
+#' data in wait listed transplant candidates
+#'
+#' @format A data frame with 2000 rows and 13 variables:
+#' \describe{
+#'   \item{ ID }{ an unique identifyer }
+#'   \item{ bg }{ blood group }
+#'   \item{ A1 }{ HLA-A allele 1 }
+#'   \item{ A2 }{ HLA-A allele 2 }
+#'   \item{ B1 }{ HLA-A allele 1 }
+#'   \item{ B2 }{ HLA-A allele 2 }
+#'   \item{ DR1 }{ HLA-A allele 1 }
+#'   \item{ DR2 }{ HLA-A allele 2 }
+#'   \item{ age }{ years old }
+#'   \item{ dialysis }{ months on dialysis }
+#'   \item{ cPRA }{ calculated PRA percentage }
+#'   \item{ urgent }{ clinicaly urgent }
+#' }
+#' @source simK::candidates_df(n = 2000)
+"cds"
+```
+
+
+```{r function-dns, eval = FALSE}
+#' organ donors
+#'
+#' data in donors for organ transplantation
+#'
+#' @format A data frame with 280 rows and 9 variables:
+#' \describe{
+#'   \item{ ID }{ an unique identifyer }
+#'   \item{ bg }{ blood group }
+#'   \item{ A1 }{ HLA-A allele 1 }
+#'   \item{ A2 }{ HLA-A allele 2 }
+#'   \item{ B2 }{ HLA-A allele 1 }
+#'   \item{ B1 }{ HLA-A allele 2 }
+#'   \item{ DR1 }{ HLA-A allele 1 }
+#'   \item{ DR2 }{ HLA-A allele 2 }
+#'   \item{ age }{ years old }
+#' }
+#' @source simK::donors_df(n = 280)
+"dns"
+```
+
+```{r function-ant, eval = FALSE}
+#' HLA antibodies
+#'
+#' data in transplant candidates' HLA-antibodies
+#'
+#' @format A data frame with 10459 rows and 2 variables:
+#' \describe{
+#'   \item{ ID }{ an unique identifyer }
+#'   \item{ abs }{ HLA antibodies }
+#' }
+#' @source simK:: Abs_df(candidates = cds)
+"ant"
+```
+
+
+```{r development-inflate, eval=FALSE}
+# Run but keep eval=FALSE to avoid infinite loop
+# Execute in the console directly
+fusen::inflate(flat_file = "dev/flat_minimal.Rmd", vignette_name = "Minimal")
+```
