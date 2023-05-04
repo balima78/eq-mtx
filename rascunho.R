@@ -47,28 +47,6 @@ lima(iso = TRUE
 
 dns$nrow <- 1:nrow(dns)
 
-tic()
-all.statistics <- list()
-
-for (. in 1:100){
-  used.candidates <- NULL
-  current.iteration.statistics <- NULL
-  shuffled_donors <- sample(dns$nrow)
-
-  for (j in 1:length(shuffled_donors)){
-    tmp <- res_pairs[[shuffled_donors[j]]][
-      !ID %in% used.candidates,][
-        1:2,]
-
-    current.iteration.statistics <- data.table::rbindlist(list(current.iteration.statistics,
-                                                               tmp))
-
-    used.candidates <- c(used.candidates, tmp$ID)
-  }
-
-  all.statistics <- append(all.statistics, list(current.iteration.statistics))
-}
-toc()
 
 
 purrr::map(all.statistics, ~table(.x$SP)) |> bind_rows()
@@ -107,11 +85,12 @@ lima(iso = TRUE
 
 library(eq.mtx)
 library(histoc)
+# teste de execução do algoritmo 'eqm' 1 vez
 eqm(iso = TRUE, dABO = "O", dA = c("1", "2"),
     dB = c("15", "44"), dDR = c("1", "4"),
     donor.age = 60, df.abs = ant, data = cds, n = 2,
     q2 = 60, q3 = 80, uj.matx = uj_matx(), check.validity = TRUE)
-
+# teste de execução do algoritmo 'lima' 1 vez
 lima(iso = TRUE, dABO = "O", dA = c("1", "2"),
      dB = c("15", "44"), dDR = c("1", "4"),
      donor.age = 60, df.abs = ant, data = cds, n = 2,
@@ -120,13 +99,17 @@ lima(iso = TRUE, dABO = "O", dA = c("1", "2"),
      , cPRA2 = 85
      , check.validity = TRUE)
 
-donor_recipient_pairs_v2(df.donors = dns,
-                         df.candidates = cds,
-                         df.abs = ant,
-                         algorithm = eqm,
-                         n = 0)
-
-histoc:::candidate_dataframe_check
 
 
 
+library(tidyverse)
+bind_rows(res_eqm, .id = "Did") %>%
+  filter(Did == 180)
+
+res_eqm[[180]]
+
+dns[180,]
+
+rm(list= 'dns')
+
+dns
