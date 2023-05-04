@@ -104,3 +104,29 @@ lima(iso = TRUE
                  , cPRA1 = 50
                  , cPRA2 = 85
                  , check.validity = TRUE)
+
+library(eq.mtx)
+library(histoc)
+eqm(iso = TRUE, dABO = "O", dA = c("1", "2"),
+    dB = c("15", "44"), dDR = c("1", "4"),
+    donor.age = 60, df.abs = ant, data = cds, n = 2,
+    q2 = 60, q3 = 80, uj.matx = uj_matx(), check.validity = TRUE)
+
+lima(iso = TRUE, dABO = "O", dA = c("1", "2"),
+     dB = c("15", "44"), dDR = c("1", "4"),
+     donor.age = 60, df.abs = ant, data = cds, n = 2,
+     q2 = 60, q3 = 80
+     , cPRA1 = 50
+     , cPRA2 = 85
+     , check.validity = TRUE)
+
+donor_recipient_pairs_v2(df.donors = dns,
+                         df.candidates = cds,
+                         df.abs = ant,
+                         algorithm = eqm,
+                         n = 0)
+
+histoc:::candidate_dataframe_check
+
+
+
