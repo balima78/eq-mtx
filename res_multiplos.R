@@ -96,10 +96,10 @@ nest_eqm <- bind_rows(all.statistics.eqm, .id = 'it') %>%
   rename(data.eqm = data)
 
 
-nest_lima <- bind_rows(all.statistics.lima, .id = 'it') %>%
-  group_by(it) %>%
-  nest() %>%
-  ungroup() %>%
+nest_lima <- bind_rows(all.statistics.lima, .id = 'it') |>
+  group_by(it) |>
+  nest() |>
+  ungroup() |>
   mutate(age_lima = map_dbl(data, ~mean(.x$age)),
          mmHLA_lima = map_dbl(data, ~mean(.x$mmHLA)),
          mmHLA0_lima = map_dbl(data, ~sum(.x$mmHLA == 0)),
@@ -112,7 +112,7 @@ nest_lima <- bind_rows(all.statistics.lima, .id = 'it') %>%
          dialysis_lima = map_dbl(data, ~mean(.x$dialysis)),
          cPRA_lima = map_dbl(data, ~mean(.x$cPRA)),
          HI_lima = map_dbl(data, ~sum(.x$HI))
-  ) %>%
+  ) |>
   rename(data.lima = data)
 
 
@@ -156,4 +156,8 @@ compara(variavel = 'cPRA') %>%
   geom_density_ridges() +
   theme_ridges()
 
+devtools::install_github("txopen/histoc")
 
+library(histoc)
+
+targets::tar_script()
