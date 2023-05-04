@@ -73,7 +73,7 @@ toc()
 
 
 
-bind_rows(all.statistics.eqm, .id = 'it') %>%
+nest_eqm <- bind_rows(all.statistics.eqm, .id = 'it') %>%
   # as_tibble() %>%
   # nest(data = !it) %>%
   group_by(it) %>%
@@ -96,7 +96,7 @@ bind_rows(all.statistics.eqm, .id = 'it') %>%
   rename(data.eqm = data)
 
 
-bind_rows(all.statistics.lima, .id = 'it') %>%
+nest_lima <- bind_rows(all.statistics.lima, .id = 'it') %>%
   group_by(it) %>%
   nest() %>%
   ungroup() %>%
@@ -116,7 +116,44 @@ bind_rows(all.statistics.lima, .id = 'it') %>%
   rename(data.lima = data)
 
 
+compara <- function(variavel = 'age'){
 
-# ID bg A1 A2 B1 B2 DR1 DR2 mmA mmB mmDR mmHLA age donor_age dialysis cPRA HI ptsEQM SP urgent
-#
-# AM = ifelse(SP == 0 & cPRA >= 85, 1, 0)
+  df1 <- nest_eqm %>%
+   select(it, starts_with(variavel))
+ df2 <- nest_lima %>%
+   select(it, starts_with(variavel))
+
+ df <- df1 %>%
+   left_join(df2) %>%
+   pivot_longer(cols = starts_with(variavel),
+                values_to = variavel,
+                names_to = 'algoritmo')
+
+ df
+
+}
+
+library(ggridges)
+compara() %>%
+  ggplot(aes(x = age, y = algoritmo)) +
+  geom_density_ridges() +
+  theme_ridges()
+
+compara(variavel = 'mmHLA_') %>%
+  ggplot(aes(x = mmHLA_, y = algoritmo)) +
+  geom_density_ridges() +
+  theme_ridges()
+
+
+compara(variavel = 'dialysis') %>%
+  ggplot(aes(x = dialysis, y = algoritmo)) +
+  geom_density_ridges() +
+  theme_ridges()
+
+
+compara(variavel = 'cPRA') %>%
+  ggplot(aes(x = cPRA, y = algoritmo)) +
+  geom_density_ridges() +
+  theme_ridges()
+
+
