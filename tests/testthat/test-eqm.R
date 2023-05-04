@@ -38,26 +38,20 @@ test_that("test eqm", {
         B2 = c('27', '44', '27'),
         DR1 = c('11', '4', '11'),
         DR2 = c('7', '12', '7'),
-        age = c(65, 58, 55),
-        dialysis = c(101, 0, 0),
-        cPRA = c(51, 86, 86),
-        urgent = c(0,0,0),
-        #xm= c(NA, NA, NA),
-        donor_age = c(60, 60, 60),
-        SP = c(0,0,0),
-        HI = c(FALSE, TRUE, TRUE),
-        compBlood = c(TRUE, TRUE, TRUE),
-        row_n = c(6,1,2),
-        
         mmA = c(1, 1, 1),
         mmB = c(1, 1, 1),
         mmDR = c(2, 1, 2),
         mmHLA = c(4, 3, 4),
-        
-        co = c(2,2,2),
-        ro = c(1,5,5),
-        pts = c(90, 50, 50)
-    )
+        age = c(65, 58, 55),
+        donor_age = c(60, 60, 60),
+        dialysis = c(101, 0, 0),
+        cPRA = c(51, 86, 86),
+        HI = c(FALSE, TRUE, TRUE),
+        ptsEQM = c(90, 50, 50),
+        SP = c(0,0,0),
+        AM = c(0,1,1),
+        urgent = c(0,0,0)
+        )
 
     library(histoc)
     
@@ -74,8 +68,7 @@ test_that("test eqm", {
             q2 = q2,
             q3 = q3,
             uj.matx = uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.1)
-            )[, xm:=NULL][] 
-      ,
+            ),
       results
     )
     

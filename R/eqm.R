@@ -113,14 +113,36 @@ eqm <- function(iso = TRUE
                                       dialysis <= q2 & cPRA > 50 , 5,
                                       dialysis <= q2 & cPRA <= 50 , 6)
              ),
-       by = 'ID'][, pts:= uj_matx()[co,ro], by = 'ID']
+       by = 'ID'][, ptsEQM := uj_matx()[co,ro],
+                  by = 'ID'][, AM := ifelse(SP == 0 & HI, 1, 0)] 
 
 
   return(
     data[compBlood == TRUE & (xm == 'NEG' | is.na(xm)),]
-    [order(-SP, -pts, mmHLA, -dialysis)]
+    [order(-ptsEQM, mmHLA, -dialysis)]
     [1:n]
-    [!is.na(ID),]
+    [!is.na(ID),][, 
+                  .(ID, 
+                    bg, 
+                    A1, 
+                    A2, 
+                    B1, 
+                    B2, 
+                    DR1, 
+                    DR2, 
+                    mmA, 
+                    mmB, 
+                    mmDR, 
+                    mmHLA, 
+                    age, 
+                    donor_age, 
+                    dialysis, 
+                    cPRA, 
+                    HI, 
+                    ptsEQM, 
+                    SP, 
+                    AM,
+                    urgent)]
   )
   
 }
