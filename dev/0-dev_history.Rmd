@@ -56,13 +56,14 @@ usethis::use_news_md()
 to include datasets we need the package to already be built; only once the package exists can we include data sets. 
 
 ```{r}
+#library(simK)
 local({
-  cds <- simK::candidates_df(n = 2000) |>
-  dplyr::select(ID, bg, A1, A2, B1, B2, DR1, DR2, age, dialysis, cPRA, urgent)
+  cds <- simK::candidates_df(n = 2000, prob.urgent = 0) |>
+    dplyr::select(ID, bg, A1, A2, B1, B2, DR1, DR2, age, dialysis, cPRA, urgent)
 #dns <- simK::donors_df(n = 280)
 #ant <-  simK::Abs_df(candidates =cds)
   
-  # usethis::use_data(cds, overwrite = TRUE)
+  usethis::use_data(cds, overwrite = TRUE)
   # usethis::use_data(dns, overwrite = TRUE)
   #usethis::use_data(ant, overwrite = TRUE)
 })

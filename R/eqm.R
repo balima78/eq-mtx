@@ -119,7 +119,7 @@ eqm <- function(iso = TRUE
 
   return(
     data[compBlood == TRUE & (xm == 'NEG' | is.na(xm)),]
-    [order(-ptsEQM, mmHLA, -dialysis)]
+    [order(-urgent, -ptsEQM, mmHLA, -dialysis)]
     [1:n]
     [!is.na(ID),][, 
                   .(ID, 
