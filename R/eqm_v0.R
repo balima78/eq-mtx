@@ -23,12 +23,13 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' eqm <- function(iso = TRUE, dABO = "O" , 
+#' eqm_v0 <- function(iso = TRUE, dABO = "O" , 
 #' dA = c("1","2"), dB = c("15","44"), dDR = c("1","4") , 
 #' donor.age = 60 , df.abs = cabs , data = candidates , 
 #' n = 2 , q2 = 60 , q3 = 80 , uj.matx = uj_matx(), 
 #' check.validity = FALSE)
-eqm <- function(iso = TRUE
+#' }
+eqm_v0 <- function(iso = TRUE
                 , dABO = "O"
                 , dA = c("1","2"), dB = c("15","44"), dDR = c("1","4")
                 , donor.age = 60
@@ -37,7 +38,7 @@ eqm <- function(iso = TRUE
                 , n = 2
                 , q2 = 60
                 , q3 = 80
-                , uj.matx = uj_matx()
+                , uj.matx = uj_matx_v0()
                 , check.validity = FALSE){
   
   # if(check.validity){

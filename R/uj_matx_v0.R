@@ -10,8 +10,9 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.1)
-uj_matx <- function(max.val = 100,
+#' uj_matx_v0(max.val = 100, ratio.util = 0.1, ratio.just = 0.1)
+#' }
+uj_matx_v0 <- function(max.val = 100,
                     ratio.util = 0.1,
                     ratio.just = 0.1){
   

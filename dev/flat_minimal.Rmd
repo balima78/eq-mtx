@@ -18,9 +18,9 @@ library(testthat)
 pkgload::load_all(export_all = FALSE)
 ```
 
-# uj_matx
+# uj_matx_v0
 
-```{r function-uj_matx}
+```{r function-uj_matx_v0}
 #' Utility - Justice matrix
 #'
 #' @description Creates a matrix with scores for utility and justice criteria on organ transplantation
@@ -29,7 +29,7 @@ pkgload::load_all(export_all = FALSE)
 #' @param ratio.just A numerical value between 0 and 0.5 corresponding to the decreasing rate for the justice criterion (by column)
 #' @return A 6 by 6 matrix with at line 1 row 1 has the maximum value and at line 6, row 6 has it's minimum.
 #' @export
-uj_matx <- function(max.val = 100,
+uj_matx_v0 <- function(max.val = 100,
                     ratio.util = 0.1,
                     ratio.just = 0.1){
   
@@ -72,12 +72,13 @@ uj_matx <- function(max.val = 100,
 }
 ```
 
-```{r examples-uj_matx, eval = FALSE}
+```{r examples-uj_matx_v0, eval = FALSE}
 #' \dontrun{
-#' uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.1)
+#' uj_matx_v0(max.val = 100, ratio.util = 0.1, ratio.just = 0.1)
+#' }
 ```
 
-```{r tests-uj_matx}
+```{r tests-uj_matx_v0}
 test_that("test uj_matx", {
   
   mat_test <- matrix(c(100, 90, 80, 70, 60, 50,
@@ -89,25 +90,25 @@ test_that("test uj_matx", {
                      nrow = 6,
                      byrow = T)
   
-  expect_equal(uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.1),
+  expect_equal(uj_matx_v0(max.val = 100, ratio.util = 0.1, ratio.just = 0.1),
                mat_test)
   
-  expect_error(uj_matx(max.val = 0))
-  expect_error(uj_matx(max.val = 'A'))
+  expect_error(uj_matx_v0(max.val = 0))
+  expect_error(uj_matx_v0(max.val = 'A'))
   
-  expect_error(uj_matx(ratio.util = 0.6))
-  expect_error(uj_matx(ratio.util = 0))
+  expect_error(uj_matx_v0(ratio.util = 0.6))
+  expect_error(uj_matx_v0(ratio.util = 0))
   
-  expect_error(uj_matx(just.util = 0.6))
-  expect_error(uj_matx(just.util = 0))
+  expect_error(uj_matx_v0(just.util = 0.6))
+  expect_error(uj_matx_v0(just.util = 0))
   
 })
 ```
 
 
-# eqm
+# eqm_v0
 
-```{r function-eqm}
+```{r function-eqm_v0}
 #' Equity matrix algorithm
 #'
 #' @description An algorithm to apply on deceased donor's Kidney allocation for transplantation.
@@ -129,7 +130,7 @@ test_that("test uj_matx", {
 #' @importFrom data.table setDT fcase `:=`
 #' @return An ordered data frame with a column \code{pts} (points from utility-justice matrix), \code{SP}, \code{HI} and \code{mmHLA}.
 #' @export
-eqm <- function(iso = TRUE
+eqm_v0 <- function(iso = TRUE
                 , dABO = "O"
                 , dA = c("1","2"), dB = c("15","44"), dDR = c("1","4")
                 , donor.age = 60
@@ -138,7 +139,7 @@ eqm <- function(iso = TRUE
                 , n = 2
                 , q2 = 60
                 , q3 = 80
-                , uj.matx = uj_matx()
+                , uj.matx = uj_matx_v0()
                 , check.validity = FALSE){
   
   # if(check.validity){
@@ -249,16 +250,17 @@ eqm <- function(iso = TRUE
 }
 ```
 
-```{r examples-eqm, eval = FALSE}
+```{r examples-eqm_v0, eval = FALSE}
 #' \dontrun{
-#' eqm <- function(iso = TRUE, dABO = "O" , 
+#' eqm_v0 <- function(iso = TRUE, dABO = "O" , 
 #' dA = c("1","2"), dB = c("15","44"), dDR = c("1","4") , 
 #' donor.age = 60 , df.abs = cabs , data = candidates , 
 #' n = 2 , q2 = 60 , q3 = 80 , uj.matx = uj_matx(), 
 #' check.validity = FALSE)
+#' }
 ```
 
-```{r tests-eqm}
+```{r tests-eqm_v0}
 test_that("test eqm", {
   
     iso = TRUE
@@ -315,7 +317,7 @@ test_that("test eqm", {
     library(histoc)
     
     expect_equivalent(
-      eqm(iso = iso,
+      eqm_v0(iso = iso,
             dABO = dABO,
             dA = dA,
             dB = dB,
@@ -365,7 +367,7 @@ donor_recipient_pairs_v2 <- function(df.donors = donors,
     stop("'n' is not a valid numeric value!")
   }
 
-  if(!identical(algorithm, uk) && !identical(algorithm, lima) && !identical(algorithm, pts) && !identical(algorithm, et) && !identical(algorithm, eqm)){
+  if(!identical(algorithm, uk) && !identical(algorithm, lima) && !identical(algorithm, pts) && !identical(algorithm, et) && !identical(algorithm, eqm_v0)){
     stop("The algorithm doesn't exist.")
   }
 
@@ -450,7 +452,7 @@ test_that("test donor_recipient_pairs_v2", {
 #'   \item{ cPRA }{ calculated PRA percentage }
 #'   \item{ urgent }{ clinicaly urgent }
 #' }
-#' @source simK::candidates_df(n = 2000)
+#' @source simK::candidates_df(n = 2000, prob.urgent = 0)
 "cds"
 ```
 

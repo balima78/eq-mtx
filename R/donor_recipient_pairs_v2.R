@@ -37,7 +37,7 @@ donor_recipient_pairs_v2 <- function(df.donors = donors,
     stop("'n' is not a valid numeric value!")
   }
 
-  if(!identical(algorithm, uk) && !identical(algorithm, lima) && !identical(algorithm, pts) && !identical(algorithm, et) && !identical(algorithm, eqm)){
+  if(!identical(algorithm, uk) && !identical(algorithm, lima) && !identical(algorithm, pts) && !identical(algorithm, et) && !identical(algorithm, eqm_v0)){
     stop("The algorithm doesn't exist.")
   }
 

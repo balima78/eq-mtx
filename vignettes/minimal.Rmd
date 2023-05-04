@@ -25,22 +25,24 @@ library(eq.mtx)
 -->
 
 
-# uj_matx
+# uj_matx_v0
 
-```{r examples-uj_matx, eval = FALSE}
+```{r examples-uj_matx_v0, eval = FALSE}
 #' \dontrun{
-#' uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.1)
+#' uj_matx_v0(max.val = 100, ratio.util = 0.1, ratio.just = 0.1)
+#' }
 ```
 
-# eqm
+# eqm_v0
 
-```{r examples-eqm, eval = FALSE}
+```{r examples-eqm_v0, eval = FALSE}
 #' \dontrun{
-#' eqm <- function(iso = TRUE, dABO = "O" , 
+#' eqm_v0 <- function(iso = TRUE, dABO = "O" , 
 #' dA = c("1","2"), dB = c("15","44"), dDR = c("1","4") , 
 #' donor.age = 60 , df.abs = cabs , data = candidates , 
 #' n = 2 , q2 = 60 , q3 = 80 , uj.matx = uj_matx(), 
 #' check.validity = FALSE)
+#' }
 ```
 
 ## donor_recipient_pairs_v2
