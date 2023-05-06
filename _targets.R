@@ -7,8 +7,30 @@ library(targets)
 # and tar_read(data_summary) to view the results.
 library(tarchetypes)
 
+# run in parallel
+library(future)
+library(future.callr)
+plan(callr)
+
+# funçoes adhoc
+dados_extra <- function(dados){
+  purrr::map(dados,
+      ~.x %>%
+        dplyr::rowwise() %>%
+        dplyr::mutate(txs = txscore(recipient.age = age,
+                             recipient.race = "White", recipient.causeESRD = "Other",
+                             recipient.dialysis = dialysis,
+                             recipient.diabetes = FALSE, recipient.coronary = FALSE, recipient.albumin = 1.5, recipient.hemoglobin = 10,
+                             donor.age = donor_age,
+                             donor.diabetes = "Absence", donor.ECD = FALSE,
+                             mmHLA_A = mmA, mmHLA_B = mmB, mmHLA_DR = mmDR)$prob5y,
+               ageDiff = abs(donor_age - age),
+               mmHLA02 = mmHLA <=2) %>%
+        dplyr::ungroup())
+}
+
 # Set target-specific options such as packages:
-tar_option_set(packages = c("histoc","eq.mtx"),
+tar_option_set(packages = c("histoc","simK"),
                memory = 'transient',
                garbage_collection = TRUE)
 
@@ -16,19 +38,40 @@ tar_option_set(packages = c("histoc","eq.mtx"),
 list(
   tar_target(
     dnrs,
-    data("dns")
+    simK::donors_df(n = 280,
+                    replace = TRUE,
+                    origin = 'PT',
+                    probs = c(0.4658, 0.0343, 0.077, 0.4229),
+                    lower=18, upper=75,
+                    mean = 60, sd = 12,
+                    uk = FALSE,
+                    seed.number = 3)
   ),
   tar_target(
     cndts,
-    data("cds")
+    simK::candidates_df(n = 2000,
+                        replace = TRUE,
+                        origin = 'PT',
+                        probs.abo = c(0.43, 0.03, 0.08, 0.46),
+                        probs.cpra = c(0.7, 0.1, 0.1, 0.1),
+                        lower=18, upper=75,
+                        mean = 45, sd = 15,
+                        prob.dm = 0.12,
+                        prob.urgent = 0,
+                        uk = FALSE,
+                        seed.number = 3) |>
+      dplyr::select(ID, bg, A1, A2, B1, B2, DR1, DR2, age, dialysis, cPRA, urgent)
   ),
   tar_target(
     antbs,
-    data("ant")
+    simK::Abs_df(candidates = cndts,
+                 origin = 'PT',
+                 seed.number = 3)
   ),
+  tar_target(it.numb, 1000),
   tar_target(res_lima,
-             several(
-               iteration.number = 100,
+             histoc::several(
+               iteration.number = it.numb,
                df.donors = dnrs,
                df.candidates = cndts,
                df.abs = antbs,
@@ -39,9 +82,21 @@ list(
                q2 = 60,
                q3 = 80)
              ),
+  tar_target(res_lima_extra,
+             res_lima %>%
+               dplyr::mutate(data_extra = dados_extra(dados = data)) %>%
+               dplyr::select(it, data_extra) %>%
+               dplyr::mutate(txs_avg = purrr::map_dbl(data_extra,
+                                           ~mean(.x$txs)),
+                             ageDiff_avg = purrr::map_dbl(data_extra,
+                                               ~mean(.x$ageDiff)),
+                             mmHLA02_n = purrr::map_dbl(data_extra,
+                                             ~sum(.x$mmHLA02))
+                             )
+  ),
   tar_target(res_eqm_c01r01,
-             several(
-               iteration.number = 100,
+             histoc::several(
+               iteration.number = it.numb,
                df.donors = dnrs,
                df.candidates = cndts,
                df.abs = antbs,
@@ -52,5 +107,228 @@ list(
                q2 = 60,
                q3 = 80,
                uj.matx = uj_matx(ratio.util = 0.1, ratio.just = 0.1))
-  ) # Call your custom functions.
+             ),
+  tar_target(res_eqm_c01r01_extra,
+             res_eqm_c01r01 %>%
+               dplyr::mutate(data_extra = dados_extra(dados = data)) %>%
+               dplyr::select(it, data_extra) %>%
+               dplyr::mutate(txs_avg = purrr::map_dbl(data_extra,
+                                               ~mean(.x$txs)),
+                             ageDiff_avg = purrr::map_dbl(data_extra,
+                                                   ~mean(.x$ageDiff)),
+                             mmHLA02_n = purrr::map_dbl(data_extra,
+                                                 ~sum(.x$mmHLA02))
+               )
+  ),
+  tar_target(res_eqm_c01r02,
+             histoc::several(
+               iteration.number = it.numb,
+               df.donors = dnrs,
+               df.candidates = cndts,
+               df.abs = antbs,
+               algorithm = eqm,
+               n = 0,
+               seed.number = 123,
+               check.validity = TRUE,
+               q2 = 60,
+               q3 = 80,
+               uj.matx = uj_matx(ratio.util = 0.1, ratio.just = 0.2))
+             ),
+  tar_target(res_eqm_c01r02_extra,
+             res_eqm_c01r02 %>%
+               dplyr::mutate(data_extra = dados_extra(dados = data)) %>%
+               dplyr::select(it, data_extra) %>%
+               dplyr::mutate(txs_avg = purrr::map_dbl(data_extra,
+                                               ~mean(.x$txs)),
+                             ageDiff_avg = purrr::map_dbl(data_extra,
+                                                   ~mean(.x$ageDiff)),
+                             mmHLA02_n = purrr::map_dbl(data_extra,
+                                                 ~sum(.x$mmHLA02))
+               )
+  ),
+  tar_target(res_eqm_c01r03,
+             histoc::several(
+               iteration.number = it.numb,
+               df.donors = dnrs,
+               df.candidates = cndts,
+               df.abs = antbs,
+               algorithm = eqm,
+               n = 0,
+               seed.number = 123,
+               check.validity = TRUE,
+               q2 = 60,
+               q3 = 80,
+               uj.matx = uj_matx(ratio.util = 0.1, ratio.just = 0.3))
+             ),
+  tar_target(res_eqm_c01r03_extra,
+             res_eqm_c01r03 %>%
+               dplyr::mutate(data_extra = dados_extra(dados = data)) %>%
+               dplyr::select(it, data_extra) %>%
+               dplyr::mutate(txs_avg = purrr::map_dbl(data_extra,
+                                               ~mean(.x$txs)),
+                             ageDiff_avg = purrr::map_dbl(data_extra,
+                                                   ~mean(.x$ageDiff)),
+                             mmHLA02_n = purrr::map_dbl(data_extra,
+                                                 ~sum(.x$mmHLA02))
+               )
+  ),
+  tar_target(res_eqm_c01r04,
+             histoc::several(
+               iteration.number = it.numb,
+               df.donors = dnrs,
+               df.candidates = cndts,
+               df.abs = antbs,
+               algorithm = eqm,
+               n = 0,
+               seed.number = 123,
+               check.validity = TRUE,
+               q2 = 60,
+               q3 = 80,
+               uj.matx = uj_matx(ratio.util = 0.1, ratio.just = 0.4))
+             ),
+  tar_target(res_eqm_c01r04_extra,
+             res_eqm_c01r04 %>%
+               dplyr::mutate(data_extra = dados_extra(dados = data)) %>%
+               dplyr::select(it, data_extra) %>%
+               dplyr::mutate(txs_avg = purrr::map_dbl(data_extra,
+                                               ~mean(.x$txs)),
+                             ageDiff_avg = purrr::map_dbl(data_extra,
+                                                   ~mean(.x$ageDiff)),
+                             mmHLA02_n = purrr::map_dbl(data_extra,
+                                                 ~sum(.x$mmHLA02))
+               )
+  ),
+  tar_target(res_eqm_c01r05,
+             histoc::several(
+               iteration.number = it.numb,
+               df.donors = dnrs,
+               df.candidates = cndts,
+               df.abs = antbs,
+               algorithm = eqm,
+               n = 0,
+               seed.number = 123,
+               check.validity = TRUE,
+               q2 = 60,
+               q3 = 80,
+               uj.matx = uj_matx(ratio.util = 0.1, ratio.just = 0.5))
+             ),
+  tar_target(res_eqm_c01r05_extra,
+             res_eqm_c01r05 %>%
+               dplyr::mutate(data_extra = dados_extra(dados = data)) %>%
+               dplyr::select(it, data_extra) %>%
+               dplyr::mutate(txs_avg = purrr::map_dbl(data_extra,
+                                               ~mean(.x$txs)),
+                             ageDiff_avg = purrr::map_dbl(data_extra,
+                                                   ~mean(.x$ageDiff)),
+                             mmHLA02_n = purrr::map_dbl(data_extra,
+                                                 ~sum(.x$mmHLA02))
+               )
+  ),
+  tar_target(res_eqm_c02r01,
+             histoc::several(
+               iteration.number = it.numb,
+               df.donors = dnrs,
+               df.candidates = cndts,
+               df.abs = antbs,
+               algorithm = eqm,
+               n = 0,
+               seed.number = 123,
+               check.validity = TRUE,
+               q2 = 60,
+               q3 = 80,
+               uj.matx = uj_matx(ratio.util = 0.2, ratio.just = 0.1))
+             ),
+  tar_target(res_eqm_c02r01_extra,
+             res_eqm_c02r01 %>%
+               dplyr::mutate(data_extra = dados_extra(dados = data)) %>%
+               dplyr::select(it, data_extra) %>%
+               dplyr::mutate(txs_avg = purrr::map_dbl(data_extra,
+                                               ~mean(.x$txs)),
+                             ageDiff_avg = purrr::map_dbl(data_extra,
+                                                   ~mean(.x$ageDiff)),
+                             mmHLA02_n = purrr::map_dbl(data_extra,
+                                                 ~sum(.x$mmHLA02))
+               )
+  ),
+  tar_target(res_eqm_c03r01,
+             histoc::several(
+               iteration.number = it.numb,
+               df.donors = dnrs,
+               df.candidates = cndts,
+               df.abs = antbs,
+               algorithm = eqm,
+               n = 0,
+               seed.number = 123,
+               check.validity = TRUE,
+               q2 = 60,
+               q3 = 80,
+               uj.matx = uj_matx(ratio.util = 0.3, ratio.just = 0.1))
+             ),
+  tar_target(res_eqm_c03r01_extra,
+             res_eqm_c03r01 %>%
+               dplyr::mutate(data_extra = dados_extra(dados = data)) %>%
+               dplyr::select(it, data_extra) %>%
+               dplyr::mutate(txs_avg = purrr::map_dbl(data_extra,
+                                               ~mean(.x$txs)),
+                             ageDiff_avg = purrr::map_dbl(data_extra,
+                                                   ~mean(.x$ageDiff)),
+                             mmHLA02_n = purrr::map_dbl(data_extra,
+                                                 ~sum(.x$mmHLA02))
+               )
+  ),
+  tar_target(res_eqm_c04r01,
+             histoc::several(
+               iteration.number = it.numb,
+               df.donors = dnrs,
+               df.candidates = cndts,
+               df.abs = antbs,
+               algorithm = eqm,
+               n = 0,
+               seed.number = 123,
+               check.validity = TRUE,
+               q2 = 60,
+               q3 = 80,
+               uj.matx = uj_matx(ratio.util = 0.4, ratio.just = 0.1))
+             ),
+  tar_target(res_eqm_c04r01_extra,
+             res_eqm_c04r01 %>%
+               dplyr::mutate(data_extra = dados_extra(dados = data)) %>%
+               dplyr::select(it, data_extra) %>%
+               dplyr::mutate(txs_avg = purrr::map_dbl(data_extra,
+                                               ~mean(.x$txs)),
+                             ageDiff_avg = purrr::map_dbl(data_extra,
+                                                   ~mean(.x$ageDiff)),
+                             mmHLA02_n = purrr::map_dbl(data_extra,
+                                                 ~sum(.x$mmHLA02))
+               )
+  ),
+  tar_target(res_eqm_c05r01,
+             histoc::several(
+               iteration.number = it.numb,
+               df.donors = dnrs,
+               df.candidates = cndts,
+               df.abs = antbs,
+               algorithm = eqm,
+               n = 0,
+               seed.number = 123,
+               check.validity = TRUE,
+               q2 = 60,
+               q3 = 80,
+               uj.matx = uj_matx(ratio.util = 0.5, ratio.just = 0.1))
+             ),
+  tar_target(res_eqm_c05r01_extra,
+             res_eqm_c05r01 %>%
+               dplyr::mutate(data_extra = dados_extra(dados = data)) %>%
+               dplyr::select(it, data_extra) %>%
+               dplyr::mutate(txs_avg = purrr::map_dbl(data_extra,
+                                               ~mean(.x$txs)),
+                             ageDiff_avg = purrr::map_dbl(data_extra,
+                                                   ~mean(.x$ageDiff)),
+                             mmHLA02_n = purrr::map_dbl(data_extra,
+                                                 ~sum(.x$mmHLA02))
+               )
+  )
+  ,tar_render(report_eqm,
+              "ReportEQM.Rmd") # Here is our call to tar_render()
+
 )

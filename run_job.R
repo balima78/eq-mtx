@@ -1,3 +1,10 @@
 library(targets)
 
-tar_make()
+#tar_destroy()
+
+#tar_make()
+targets::tar_make_future(workers = 2)
+
+
+
+

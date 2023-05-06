@@ -100,16 +100,18 @@ lima(iso = TRUE, dABO = "O", dA = c("1", "2"),
      , check.validity = TRUE)
 
 
+several(
+  iteration.number = 100,
+  df.donors = tar_read(dnrs),
+  df.candidates = tar_read(cndts),
+  df.abs = tar_read(antbs),
+  algorithm = eqm,
+  n = 0,
+  seed.number = 123,
+  check.validity = TRUE,
+  q2 = 60,
+  q3 = 80,
+  uj.matx = uj_matx(ratio.util = 0.1, ratio.just = 0.1))
 
 
-library(tidyverse)
-bind_rows(res_eqm, .id = "Did") %>%
-  filter(Did == 180)
-
-res_eqm[[180]]
-
-dns[180,]
-
-rm(list= 'dns')
-
-dns
+tar_read(cndts)$dialysis |> quantile(probs=seq(0, 1, 0.1))

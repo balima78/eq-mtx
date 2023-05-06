@@ -1,0 +1,409 @@
+---
+title: "Equity Matrix (EQM) algorithm"
+author: "Bruno A Lima"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: false
+    self_contained: yes
+    highlight: pygments
+    code_download: true
+    fig_caption: true
+    lib_dir: getwd()
+---
+
+<img src="txor.jpg" style="position:absolute;top:70px;right:50px;" />
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+
+# pacotes
+library(targets)
+library(tidyverse)
+library(viridis)
+library(ggridges)
+
+# definir tema bw para os gráficos
+theme_set(theme_bw())
+
+### definir funções adhoc
+## preencher matriz de equidade com valores
+# dados tabelados
+# colunas (cos) e linhas (ros) da matriz
+co <- c('AgeDiff < 9 \n mmHLA 0-2',
+        'AgeDiff < 9 \n mmHLA 3-4',
+        'AgeDiff >= 9 \n mmHLA 0-2',
+        'AgeDiff < 9 \n mmHLA 5-6',
+        'AgeDiff >= 9 \n mmHLA 3-4',
+        'AgeDiff >= 9 \n mmHLA 5-6')
+ro <- c('TmDial > q3 \n cPRA >50',
+        'TmDial > q3 \n cPRA <=50',
+        'TmDial > q2 \n cPRA >50',
+        'TmDial > q2 \n cPRA <=50',
+        'TmDial <= q2 \n cPRA >50',
+        'TmDial <= q2 \n cPRA <=50')
+exg <- expand.grid(co,ro) %>% 
+  rename(cos = Var1,
+         ros = Var2)
+# dados
+mtx_data_uj <- function(u = 0.1, j = 0.1){
+  exg %>% 
+  mutate(value = c(t(histoc::uj_matx(ratio.util = u, ratio.just = j))))
+  }
+
+# grafico
+gg_matx <- function(data){
+  ggplot(data,
+         aes(x=cos, y=ros, col = value, fill = value, label = value)) +
+    geom_tile(aes(width=.90, height=.90)) +
+    geom_text(col = "black") +
+    theme_minimal() +
+    labs(x = 'Utility', y = 'Justice') +
+    scale_x_discrete(position = "top") +
+    scale_y_discrete(limits = rev(unique(sort(exg$ros)))) +
+    scale_fill_viridis(alpha = 0.7, option = 'G') +
+    # scale_fill_gradient2(low = "red", #mid = "yellow",
+    #                      high = "green") +
+    # scale_color_gradient2(low = "red", #mid = "yellow",
+    #                       high = "green")
+    theme(legend.position = 'none')
+}
+
+## junta resultados dos modelos
+res_modelos <- function(variavel){
+  data <- bind_rows(
+    tar_read(res_lima) %>% select(it, {{variavel}}) %>% mutate(model = 'lima'),
+    tar_read(res_eqm_c01r01) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0101'),
+    tar_read(res_eqm_c01r02) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0102'),
+    tar_read(res_eqm_c01r03) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0103'),
+    tar_read(res_eqm_c01r04) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0104'),
+    tar_read(res_eqm_c01r05) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0105'),
+    tar_read(res_eqm_c02r01) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0201'),
+    tar_read(res_eqm_c03r01) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0301'),
+    tar_read(res_eqm_c04r01) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0401'),
+    tar_read(res_eqm_c05r01) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0501')
+    )
+  
+  plot <- ggplot(data, aes(x = {{variavel}}, y = model, fill = stat(x))) + 
+  #geom_density_ridges(fill = "#00AFBB", rel_min_height = 0.01) +
+  geom_density_ridges_gradient(scale = 3, size = 0.3, rel_min_height = 0.01) +
+  scale_fill_viridis_c(name = "", option = "E") +
+  theme(legend.position = 'none')
+  
+  return(list(data = data,
+              plot= plot))
+}
+
+## junta resultados dos modelos_extra
+res_modelos_extra <- function(variavel){
+  data <- bind_rows(
+    tar_read(res_lima_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'lima'),
+    tar_read(res_eqm_c01r01_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'eqm0101'),
+    tar_read(res_eqm_c01r02_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'eqm0102'),
+    tar_read(res_eqm_c01r03_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'eqm0103'),
+    tar_read(res_eqm_c01r04_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'eqm0104'),
+    tar_read(res_eqm_c01r05_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'eqm0105'),
+    tar_read(res_eqm_c02r01_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'eqm0201'),
+    tar_read(res_eqm_c03r01_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'eqm0301'),
+    tar_read(res_eqm_c04r01_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'eqm0401'),
+    tar_read(res_eqm_c05r01_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'eqm0501')
+    )
+  
+  plot <- ggplot(data, aes(x = {{variavel}}, y = model, fill = stat(x))) + 
+  #geom_density_ridges(fill = "#00AFBB", rel_min_height = 0.01) +
+  geom_density_ridges_gradient(scale = 3, size = 0.3, rel_min_height = 0.01) +
+  scale_fill_viridis_c(name = "", option = "E") +
+  theme(legend.position = 'none')
+  
+  return(list(data = data,
+              plot= plot))
+  }
+
+```
+
+## Objectivo
+
+Definir uma matriz de equidade que seja aplicável à seleção do par dador receptor em transplantação renal.
+
+## Métodos {.tabset}
+
+Para esta análise foram gerados dados sintéticos para um lista de espera simulada de 2000 candidatos a transplante com a respectiva informação clinica, imunológica e demográfica. Neste exercício, não foram gerados candidatos classificados como clinicamente urgentes. 
+
+Também foram gerados dados demográficos e imunológicos para um conjunto de 280 dadores de rim. 
+
+Os conjuntos de dados foram gerados com o _package_ {simK}^[available from: https://github.com/txopen/simK]:
+
+```
+cndts <- simK::candidates_df(n = 2000, 
+                          replace = TRUE,
+                          origin = 'PT',
+                          probs.abo = c(0.43, 0.03, 0.08, 0.46),
+                          probs.cpra = c(0.7, 0.1, 0.1, 0.1),
+                          lower=18, upper=75,
+                          mean = 45, sd = 15,
+                          prob.dm = 0.12,
+                          prob.urgent = 0,
+                          uk = FALSE,
+                          seed.number = 3) |>
+          dplyr::select(ID, bg, A1, A2, B1, B2, DR1, DR2, age, dialysis, cPRA, urgent)
+          
+antbs <- simK::Abs_df(candidates = cds,
+                    origin = 'PT',
+                    seed.number = 3)
+          
+dnrs <- simK::donors_df(n = 280,
+                      replace = TRUE,
+                      origin = 'PT',
+                      probs = c(0.4658, 0.0343, 0.077, 0.4229),
+                      lower=18, upper=75,
+                      mean = 60, sd = 12,
+                      uk = FALSE,
+                      seed.number = 3)
+```
+
+### Descrição
+
+Foram usados os algoritmos de alocação `lima()` e `eqm()` disponíveis através do _package_ {histoc}^[available from: https://github.com/txopen/histoc].
+
+Resumidamente, no modelo **Lima** os candidatos a transplante são classificados em cores de prioridade tendo em conta o respectivo tempo de diálise e o valor de cPRA: laranja para os doentes com cPRA > 85% ou tempo de diálise > 3º quartil; amarelo para os doentes com cPRa > 50% ou tempo de diálise > mediana; e verdes todos os restantes. Os candidatos são ainda inicialmente distribuidos tendo em conta o grupo etário dos dadores, ou seja, dadores >= 65 anos são alocados prioritáriamente a doentes >= 65 anos e dadores < 65 anos são alocados prioritáriamente a doentes < 65 (_Senior Program_).
+
+Nos modelos de **matriz de equidade** são considerados como critérios de utilidade os mmHLA e o matching de longevidade. Para os critérios de justiça são considerados a mediana e o 3º quartil do tempo de diálise bem como os respectivos valores de cPRA, tal como descrito no separador ['EQM'](#eqm).
+
+Para a construção das matrizes de equidade testadas, foi assumido um valor máximo de 100 e foram considerados os parâmetros: 
+
++ eqm0101: `uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.1)`
++ eqm0102: `uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.2)`
++ eqm0103: `uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.3)`
++ eqm0104: `uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.4)`
++ eqm0105: `uj_matx(max.val = 100, ratio.util = 0.1, ratio.just = 0.5)`
++ eqm0201: `uj_matx(max.val = 100, ratio.util = 0.2, ratio.just = 0.1)`
++ eqm0301: `uj_matx(max.val = 100, ratio.util = 0.3, ratio.just = 0.1)`
++ eqm0401: `uj_matx(max.val = 100, ratio.util = 0.4, ratio.just = 0.1)`
++ eqm0501: `uj_matx(max.val = 100, ratio.util = 0.5, ratio.just = 0.1)`
+ 
+Nesta análise e para todos os modelos foi considerado como 3º quartil do tempo de diálise 80 meses e como mediana 60 meses.
+
+A alocação dos 280 dadores é feita selecionando os dois melhores candidatos para cada dador sem repetir os candidatos. Isto é, em cada iteração, para o primeiro dador são atribuidos os dois melhores candidatos (garantindo sempre a compatibilidade ABO e um XM virtual negativo), ao segundo dador são atribuidos os 2 melhores candidatos sobrantes (sem os atribuidos a dadores anteriores) e assim sucessivamente até serem atribuidos um máximo de 560 candidatos (2 x 280). Para garantir que a ordenação dos dadores não influencia os resultados, foram feitas até 1000 iterações em que para cada uma das iterações a ordem dos dadores para os quais são atribuidos os candidatos é alterada aleatoriamente.
+
+Assim, para cada iteração é possível calcular valores médios das características dos candidatos seleccionados pelos modelos e construir as distribuições desses valores médios.
+
+### EQM 
+
+#### Utility _vs_ Justice
+
+Duma forma geral, os princípios éticos que guiam a alocação de rins em transplantação são a utilidade e justiça. Se por um lado se pretende garantir um acesso justo e igual para todos os candidatos a transplante, por outro, deve-se promover uma alocação eficiente, ou seja, assegurar a utilidade do transplante. Assim, distinguimos como critérios:
+
++ de utilidade:
+    + *matching* de longevidade;
+    + *matching* HLA;
+
++ de justiça:
+    + tempo de espera em diálise;
+    + sensibilização HLA;
+    + prévio dador vivo;
+    + minorias étnicas;
+    + prioridade pediátrica;
+    + urgência médica.
+
+#### EQM {#eqm}
+
+De forma a equilibrar critérios de utilidade com critérios de justiça, a construção da matriz de equidade é feita através da função `histco::uj_matx()` considerando dois parâmetros:
+
++ `ratio.util` - _A numerical value between 0 and 0.5 corresponding to the decreasing rate for the utility criterion (by row);_
++ `ratio.just` - _A numerical value between 0 and 0.5 corresponding to the decreasing rate for the justice criterion (by column)._
+
+Assim, a partir de um valor máximo inicial (geralmente 100), os valores por linha são obtidos subtraindo consecutivamente o peso dado à utilidade (Max * `ratio.util`), enquanto que aos valores por coluna é subtratido o peso dos critérios de justiça (MAX * `ratio.just`).
+
+```{r}
+
+# dados para grafio da matriz
+matx_data <- exg %>% 
+  mutate(value = c('Max','Max \n(1 - ratio.util)','Max \n(1 - 2 x ratio.util)','Max \n(1 - 3 x ratio.util)','Max \n(1 - 4 x ratio.util)','Max \n(1 - 5 x ratio.util)',
+                   'Max \n(1 - ratio.just)','-','-','-','-','-',
+                   'Max \n(1 - 2 x ratio.just)','-','-','-','-','-',
+                   'Max \n(1 - 3 x ratio.just)','-','-','-','-','-',
+                   'Max \n(1 - 4 x ratio.just)','-','-','-','-','-',
+                   'Max \n(1 - 5 x ratio.just)','-','-','-','-','-')
+         )
+
+ggplot(matx_data,
+       aes(x=cos, y=ros, label = value)) +
+  geom_tile(aes(width=.95, height=.95)) +
+  geom_text(col = "white", size = 2.8) +
+  labs(x = 'Utility', y = 'Justice') +
+  scale_x_discrete(position = "top") +
+  scale_y_discrete(limits = rev(unique(sort(matx_data$ros)))) +
+  theme(legend.position = 'none')
+
+```
+
+Como critérios de utilidade são considerados os mismatchs HLA (mmHLA) entre dador e receptor bem com um matching de longevidade obtido a partir da diferença absoluta entre as idades de dador e receptor (AgeDiff = |idade dador - idade receptor|). Com estes valores é obtida uma escala com 6 opções.
+
+Como critérios de justiça são considerados o tempo em diálise (TmDial) dos candidatos a tranplante e os seus repectivos valores de cPRA. O TmDial é dividido de acordo com a mediana (q2) e 3º quartil (q3) dos tempos de diálise de todos os candidatos a transplante em análise, obtendo-se três grupos: TmDial > q3; q2 < TmDial <= q3; TmDial <= q2. Os valores de cPRA são dicotomizados no valor 50 (isto é, cPRA > 50 vs cPRA <= 50). Da combinação destes dois grupos é obtida uma uma escala com 6 opções.   
+Assim, temos uma matriz de equidade final com 36 (6x6) valores. 
+
+Por exemplo, para um `ratio.util = 0.1` e `ratio.just = 0.1`, obtemos a matriz de equidade:  
+
+```{r, out.width="75%"}
+matx_data_u01_j01 <- mtx_data_uj(u = 0.1, j = 0.1)
+gg_matx(data = matx_data_u01_j01)
+
+```
+
+para um `ratio.util = 0.4` e `ratio.just = 0.1`, temos:
+
+```{r, out.width="75%"}
+matx_data_u04_j01 <- mtx_data_uj(u = 0.4, j = 0.1)
+gg_matx(data = matx_data_u04_j01)
+```
+
+para um `ratio.util = 0.1` e `ratio.just = 0.4`, temos:
+
+```{r, out.width="75%"}
+matx_data_u01_j04 <- mtx_data_uj(u = 0.1, j = 0.4)
+gg_matx(data = matx_data_u01_j04)
+```
+
+
+## Resultados
+
+A comparação dos valores médios das caracteisticas dos receptores obtidos para cada iteração e para cada modelo de alocação é feito através da representação gráfica das suas distribuições.
+
+### Idade
+
+As matrizes que dão maior peso à utilidade (eqm0201, eqm0301, eqm0401 e eqm0501) são as que selecionam candidatos mais idosos, ou melhor, candidatos com idades mais próximas aos dadores. Neste exercício as idades dos dadores foram obtidas a partir duma distribuição $\sim N(60,12)$ pelo que é o modelo 'eqm0501' que seleciona candidatos com as idades mais próximas às dos dadores. No caso do modelo 'Lima' como a idade de candidatos e dadores apenas é considerada para aplicação do _Senior program_, os receptores selecionados não são tão influenciados pelas idades dos dadores. 
+
+```{r, out.width="70%"}
+res_age <- res_modelos(variavel = age_avg)
+
+res_age$plot
+
+```
+
+### Diferença de idades   
+(|idade dador - idade receptor|)
+
+Tal como referido em cima, as matrizes que dão maior peso á utilidade selecionam receptores com idades mais próximas aos dadores, ou seja, com uma diferença de idades entre dador e receptor menor.  
+
+```{r, out.width="70%"}
+res_ageDiff <- res_modelos_extra(variavel = ageDiff_avg)
+
+res_ageDiff$plot
+
+```
+
+### mmHLA
+
+Para o valor médio do número de mmHLA entre dador e receptor, são as matrizes que dão maior peso à utilidade as que selecionam pares com o menor número de mmHLA (como seria de esperar). Mesmo a matriz mais neutra (eqm0101) seleciona receptores com menos mmHLA que o modelo Lima.
+
+```{r, out.width="70%"}
+res_mmHLA <- res_modelos(variavel = mmHLA_avg)
+
+res_mmHLA$plot
+
+```
+
+### mmHLA 0 (contagem)
+
+Embora as matrizes que dão mais peso á utilidade selecionem mais receptores com zero mmHLA, este número não difere muito do obtido com o modelo Lima, uma vez que o número de mmHLA total apenas é usado na ordenação final em ambos os modelos. 
+
+```{r, out.width="70%"}
+res_mmHLA0 <- res_modelos(variavel = mmHLA0_n)
+
+res_mmHLA0$plot
+
+```
+
+### mmHLA 0-2 (contagem)
+
+Já o número de receptores com até 2 mmHLA é bastante superior na selecção das matrizes que dão maior peso à utilidade e na matriz neutra (eqm0101) em comparação com os receptores do modelo Lima.
+
+```{r, out.width="70%"}
+res_mmHLA02 <- res_modelos_extra(variavel = mmHLA02_n)
+
+res_mmHLA02$plot
+
+```
+
+### mmHLA 6 (contagem)
+
+No mesmo sentido, as matrizes que dão maior peso à utilidade selecionam menos receptores com 6 mmHLA.
+
+```{r, out.width="70%"}
+res_mmHLA6 <- res_modelos(variavel = mmHLA6_n)
+
+res_mmHLA6$plot
+
+```
+
+### tempo em diálise (meses)
+
+Como expectável, as matrizes que dão maior peso à justiça (eqm0102, eqm0103, eqm0104, eqm0105) selecionam receptores com maiores tempos em diálise do que o modelo Lima. Ainda assim o modelo Lima ainda consegue seleccionar receptores com maior tempo de diálise que o modelo neutro (eqm0101). 
+
+```{r, out.width="70%"}
+res_dialysis <- res_modelos(variavel = dialysis_avg)
+
+res_dialysis$plot
+
+```
+
+### cPRA (%)
+
+As matrizes que dão amior peso à justiça (por definição) tendem a seleccionar os receptores com valores mais altos de cPRA, sendo que a matriz eqm0102 devolve resultados muito próximos aos obtidos com o modelo Lima. 
+
+```{r, out.width="70%"}
+res_cPRA <- res_modelos(variavel = cPRA_avg)
+
+res_cPRA$plot
+
+```
+
+### Hipersensibilizados (contagem)
+
+Qaundo analizamos a contagem de receptores hipersensibilizados, obtemos resultados semelhantes aos descritos para os valores de cPRA.
+
+```{r, out.width="70%"}
+res_HI <- res_modelos(variavel = HI_n)
+
+res_HI$plot
+
+```
+
+### Senior program (contagem)
+
+Como um dos critérios do modelo Lima é a aplicação das regras do _Senior program_ (dadores maiores que 65 anos são alocados prioritariamente a candidatos 65+), o número de receptores 65+ com dadores 65+ é bastante superior no modelo Lima quando comparado com os resultados das matrizes.
+
+```{r, out.width="70%"}
+res_SP <- res_modelos(variavel = SP_n)
+
+res_SP$plot
+
+```
+
+### Tx Score (_Estimated 5-year event (mortality or graft failure) probability_)
+
+O cálculo do TxScore^[available from: https://balima.shinyapps.io/scoreTx/] que devolve a probabilidade a 5 anos do evento (morte ou perda do enxerto) foi feito tendo em conta a idade do dador, a idade do receptor, o tempo de diálise e os mmHLA. Para todas as restantes variáveis usadas para o cálculo do TxScore, foram assumidos valores constantes. 
+
+Assim, os piores valores são obtidos para o modelo lima, enquanto que os melhores resultados são dados pelas matrizes que dão maior peso á utilidade.  
+
+```{r, out.width="70%"}
+res_txs <- res_modelos_extra(variavel = txs_avg)
+
+res_txs$plot
+
+```
+
+
