@@ -75,6 +75,7 @@ gg_matx <- function(data){
 ## junta resultados dos modelos
 res_modelos <- function(variavel){
   data <- bind_rows(
+    tar_read(res_et) %>% select(it, {{variavel}}) %>% mutate(model = 'ET'),
     tar_read(res_lima) %>% select(it, {{variavel}}) %>% mutate(model = 'lima'),
     tar_read(res_eqm_c01r01) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0101'),
     tar_read(res_eqm_c01r02) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0102'),
@@ -100,6 +101,8 @@ res_modelos <- function(variavel){
 ## junta resultados dos modelos_extra
 res_modelos_extra <- function(variavel){
   data <- bind_rows(
+    tar_read(res_et_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'ET'),
     tar_read(res_lima_extra) %>% 
       select(it, {{variavel}}) %>% mutate(model = 'lima'),
     tar_read(res_eqm_c01r01_extra) %>% 
@@ -176,9 +179,11 @@ dnrs <- simK::donors_df(n = 280,
 
 ### Descrição
 
-Foram usados os algoritmos de alocação `lima()` e `eqm()` disponíveis através do _package_ {histoc}^[available from: https://github.com/txopen/histoc].
+Foram usados os algoritmos de alocação `lima()`, `et()` e `eqm()` disponíveis através do _package_ {histoc}^[available from: https://github.com/txopen/histoc].
 
-Resumidamente, no modelo **Lima** os candidatos a transplante são classificados em cores de prioridade tendo em conta o respectivo tempo de diálise e o valor de cPRA: laranja para os doentes com cPRA > 85% ou tempo de diálise > 3º quartil; amarelo para os doentes com cPRa > 50% ou tempo de diálise > mediana; e verdes todos os restantes. Os candidatos são ainda inicialmente distribuidos tendo em conta o grupo etário dos dadores, ou seja, dadores >= 65 anos são alocados prioritáriamente a doentes >= 65 anos e dadores < 65 anos são alocados prioritáriamente a doentes < 65 (_Senior Program_).
+Resumidamente, no modelo **Lima** os candidatos a transplante são classificados em cores de prioridade tendo em conta o respectivo tempo de diálise e o valor de cPRA: laranja para os doentes com cPRA > 85% ou tempo de diálise > 3º quartil; amarelo para os doentes com cPRa > 50% ou tempo de diálise > mediana; e verdes todos os restantes. Os candidatos são ainda inicialmente distribuidos tendo em conta o Senior Program (SP), ou seja, dadores >= 65 anos são alocados prioritáriamente a doentes >= 65 anos e dadores < 65 anos são alocados prioritáriamente a doentes < 65 (_Senior Program_).
+
+O modelo do EuroTransplant **ET** aplica inicialmente o SP e o programa Acceptable Missmatch (AM) em que é dada prioridade aos candidatos hipersensibilizados. Na seleção do ET são priooriizados também os pares dador-receptor com mmHLA 000, depois a ordenação dos candidatos segue um sistema de pontuação para a alocação dos órgãos. 
 
 Nos modelos de **matriz de equidade** são considerados como critérios de utilidade os mmHLA e o matching de longevidade. Para os critérios de justiça são considerados a mediana e o 3º quartil do tempo de diálise bem como os respectivos valores de cPRA, tal como descrito no separador ['EQM'](#eqm).
 
@@ -277,7 +282,6 @@ matx_data_u01_j04 <- mtx_data_uj(u = 0.1, j = 0.4)
 gg_matx(data = matx_data_u01_j04)
 ```
 
-
 ## Resultados
 
 A comparação dos valores médios das caracteisticas dos receptores obtidos para cada iteração e para cada modelo de alocação é feito através da representação gráfica das suas distribuições.
@@ -316,7 +320,7 @@ res_mmHLA$plot
 
 ```
 
-### mmHLA 0 (contagem)
+### mmHLA 000 (contagem)
 
 Embora as matrizes que dão mais peso á utilidade selecionem mais receptores com zero mmHLA, este número não difere muito do obtido com o modelo Lima, uma vez que o número de mmHLA total apenas é usado na ordenação final em ambos os modelos. 
 
@@ -393,11 +397,12 @@ res_SP$plot
 
 ```
 
-### Tx Score (_Estimated 5-year event (mortality or graft failure) probability_)
+### Tx Score   
+(_Estimated 5-year event (mortality or graft failure) percentage_)
 
-O cálculo do TxScore^[available from: https://balima.shinyapps.io/scoreTx/] que devolve a probabilidade a 5 anos do evento (morte ou perda do enxerto) foi feito tendo em conta a idade do dador, a idade do receptor, o tempo de diálise e os mmHLA. Para todas as restantes variáveis usadas para o cálculo do TxScore, foram assumidos valores constantes. 
+O cálculo do TxScore^[available from: https://balima.shinyapps.io/scoreTx/] que devolve a percentagem (probabilidade) a 5 anos do evento (morte ou perda do enxerto) foi feito tendo em conta a idade do dador, a idade do receptor, o tempo de diálise e os mmHLA. Para todas as restantes variáveis usadas para o cálculo do TxScore, foram assumidos valores constantes. 
 
-Assim, os piores valores são obtidos para o modelo lima, enquanto que os melhores resultados são dados pelas matrizes que dão maior peso á utilidade.  
+Assim, os piores valores são obtidos para o modelo Lima, enquanto que os melhores resultados são dados pelas matrizes que dão maior peso á utilidade.  
 
 ```{r, out.width="70%"}
 res_txs <- res_modelos_extra(variavel = txs_avg)
@@ -406,4 +411,44 @@ res_txs$plot
 
 ```
 
+### Resumo
+
+```{r}
+tab_resumo <- tribble(
+  ~VAR, ~lima, ~ET, ~eqm0101, ~best_model,
+  'ageDiff', 2,3,1,'eqm0501',
+  'mmHLA',2,3,1,'eqm0105',
+  'mmHLA000',2,1,3,'ET',
+  'mmHLA0-2',2,3,1,'eqm0501',
+  'mmHLA6',2,3,1,'eqm0501',
+  'tmDial',1,3,2,'eqm0105',
+  'cPRA',2,1,3,'eqm0105',
+  'Hiper',2,1,3,'ET',
+  'SP',1,1,3,'ET',
+  'TxScore',3,1,2,'eqm0501'
+  )
+
+library(kableExtra)
+
+tab_resumo$lima = cell_spec(
+  tab_resumo$lima, #color = "white", 
+  align = "c", 
+  background = factor(tab_resumo$lima, c(1, 2, 3),
+                      c("green", "yellow", "red")))
+tab_resumo$ET = cell_spec(
+  tab_resumo$ET, #color = "white", 
+  align = "c", 
+  background = factor(tab_resumo$ET, c(1, 2, 3),
+                      c("green", "yellow", "red")))
+
+tab_resumo$eqm0101 = cell_spec(
+  tab_resumo$eqm0101, #color = "white", 
+  align = "c", 
+  background = factor(tab_resumo$eqm0101, c(1, 2, 3),
+                      c("green", "yellow", "red")))
+
+kbl(tab_resumo, escape = F) %>%
+  kable_paper("striped", full_width = F)
+
+```
 

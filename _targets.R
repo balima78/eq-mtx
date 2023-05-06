@@ -94,6 +94,30 @@ list(
                                              ~sum(.x$mmHLA02))
                              )
   ),
+  tar_target(res_et,
+             histoc::several(
+               iteration.number = it.numb,
+               df.donors = dnrs,
+               df.candidates = cndts,
+               df.abs = antbs,
+               algorithm = et,
+               n = 0,
+               seed.number = 123,
+               check.validity = TRUE
+               )
+  ),
+  tar_target(res_et_extra,
+             res_et %>%
+               dplyr::mutate(data_extra = dados_extra(dados = data)) %>%
+               dplyr::select(it, data_extra) %>%
+               dplyr::mutate(txs_avg = purrr::map_dbl(data_extra,
+                                                      ~mean(.x$txs)),
+                             ageDiff_avg = purrr::map_dbl(data_extra,
+                                                          ~mean(.x$ageDiff)),
+                             mmHLA02_n = purrr::map_dbl(data_extra,
+                                                        ~sum(.x$mmHLA02))
+               )
+  ),
   tar_target(res_eqm_c01r01,
              histoc::several(
                iteration.number = it.numb,
