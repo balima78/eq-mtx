@@ -64,11 +64,10 @@ gg_matx <- function(data){
     labs(x = 'Utility', y = 'Justice') +
     scale_x_discrete(position = "top") +
     scale_y_discrete(limits = rev(unique(sort(exg$ros)))) +
-    scale_fill_viridis(alpha = 0.7, option = 'G') +
-    # scale_fill_gradient2(low = "red", #mid = "yellow",
-    #                      high = "green") +
-    # scale_color_gradient2(low = "red", #mid = "yellow",
-    #                       high = "green")
+    #scale_fill_viridis(alpha = 0.7, option = 'G') +
+    
+    scale_fill_gradient(high = 'white', low = "grey") +
+    scale_color_gradient(high = 'white', low = "grey") +
     theme(legend.position = 'none')
 }
 
@@ -76,22 +75,63 @@ gg_matx <- function(data){
 res_modelos <- function(variavel){
   data <- bind_rows(
     tar_read(res_et) %>% select(it, {{variavel}}) %>% mutate(model = 'ET'),
-    tar_read(res_lima) %>% select(it, {{variavel}}) %>% mutate(model = 'lima'),
-    tar_read(res_eqm_c01r01) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0101'),
-    tar_read(res_eqm_c01r02) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0102'),
-    tar_read(res_eqm_c01r03) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0103'),
-    tar_read(res_eqm_c01r04) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0104'),
-    tar_read(res_eqm_c01r05) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0105'),
-    tar_read(res_eqm_c02r01) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0201'),
-    tar_read(res_eqm_c03r01) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0301'),
-    tar_read(res_eqm_c04r01) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0401'),
-    tar_read(res_eqm_c05r01) %>% select(it, {{variavel}}) %>% mutate(model = 'eqm0501')
+    tar_read(res_lima) %>% select(it, {{variavel}}) %>% mutate(model = 'Lima'),
+    tar_read(res_eqm_c01r01) %>% select(it, {{variavel}}) %>% mutate(model = 'EQM_0.1-0.1'),
+    tar_read(res_eqm_c01r02) %>% select(it, {{variavel}}) %>% mutate(model = 'EQM_0.1-0.2'),
+    tar_read(res_eqm_c01r03) %>% select(it, {{variavel}}) %>% mutate(model = 'EQM_0.1-0.3'),
+    tar_read(res_eqm_c01r04) %>% select(it, {{variavel}}) %>% mutate(model = 'EQM_0.1-0.4'),
+    tar_read(res_eqm_c01r05) %>% select(it, {{variavel}}) %>% mutate(model = 'EQM_0.1-0.5'),
+    tar_read(res_eqm_c02r01) %>% select(it, {{variavel}}) %>% mutate(model = 'EQM_0.2-0.1'),
+    tar_read(res_eqm_c03r01) %>% select(it, {{variavel}}) %>% mutate(model = 'EQM_0.3-0.1'),
+    tar_read(res_eqm_c04r01) %>% select(it, {{variavel}}) %>% mutate(model = 'EQM_0.4-0.1'),
+    tar_read(res_eqm_c05r01) %>% select(it, {{variavel}}) %>% mutate(model = 'EQM_0.5-0.1'),
+    
+    tar_read(res_eqm_et_c01r01) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.1-0.1'),
+    tar_read(res_eqm_et_c01r02) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.1-0.2'),
+    tar_read(res_eqm_et_c01r03) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.1-0.3'),
+    tar_read(res_eqm_et_c01r04) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.1-0.4'),
+    tar_read(res_eqm_et_c01r05) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.1-0.5'),
+    tar_read(res_eqm_et_c02r01) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.2-0.1'),
+    tar_read(res_eqm_et_c03r01) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.3-0.1'),
+    tar_read(res_eqm_et_c04r01) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.4-0.1'),
+    tar_read(res_eqm_et_c05r01) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.5-0.1')#,
+    
+    #     tar_read(res_eqm_am_c01r01) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0101'),
+    # tar_read(res_eqm_am_c01r02) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0102'),
+    # tar_read(res_eqm_am_c01r03) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0103'),
+    # tar_read(res_eqm_am_c01r04) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0104'),
+    # tar_read(res_eqm_am_c01r05) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0105'),
+    # tar_read(res_eqm_am_c02r01) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0201'),
+    # tar_read(res_eqm_am_c03r01) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0301'),
+    # tar_read(res_eqm_am_c04r01) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0401'),
+    # tar_read(res_eqm_am_c05r01) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0501')
     )
   
-  plot <- ggplot(data, aes(x = {{variavel}}, y = model, fill = stat(x))) + 
+  plot <- ggplot(data, aes(x = {{variavel}}, y = model
+                           #, fill = stat(x)
+                           )) + 
   #geom_density_ridges(fill = "#00AFBB", rel_min_height = 0.01) +
-  geom_density_ridges_gradient(scale = 3, size = 0.3, rel_min_height = 0.01) +
-  scale_fill_viridis_c(name = "", option = "E") +
+    geom_density_ridges(scale = 5, alpha = 0.4) +
+  # geom_density_ridges_gradient(scale = 3, size = 0.3, rel_min_height = 0.01) +
+  # scale_fill_viridis_c(name = "", option = "E") +
   theme(legend.position = 'none')
   
   return(list(data = data,
@@ -104,31 +144,72 @@ res_modelos_extra <- function(variavel){
     tar_read(res_et_extra) %>% 
       select(it, {{variavel}}) %>% mutate(model = 'ET'),
     tar_read(res_lima_extra) %>% 
-      select(it, {{variavel}}) %>% mutate(model = 'lima'),
+      select(it, {{variavel}}) %>% mutate(model = 'Lima'),
     tar_read(res_eqm_c01r01_extra) %>% 
-      select(it, {{variavel}}) %>% mutate(model = 'eqm0101'),
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_0.1-0.1'),
     tar_read(res_eqm_c01r02_extra) %>% 
-      select(it, {{variavel}}) %>% mutate(model = 'eqm0102'),
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_0.1-0.2'),
     tar_read(res_eqm_c01r03_extra) %>% 
-      select(it, {{variavel}}) %>% mutate(model = 'eqm0103'),
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_0.1-0.3'),
     tar_read(res_eqm_c01r04_extra) %>% 
-      select(it, {{variavel}}) %>% mutate(model = 'eqm0104'),
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_0.1-0.4'),
     tar_read(res_eqm_c01r05_extra) %>% 
-      select(it, {{variavel}}) %>% mutate(model = 'eqm0105'),
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_0.1-0.5'),
     tar_read(res_eqm_c02r01_extra) %>% 
-      select(it, {{variavel}}) %>% mutate(model = 'eqm0201'),
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_0.2-0.1'),
     tar_read(res_eqm_c03r01_extra) %>% 
-      select(it, {{variavel}}) %>% mutate(model = 'eqm0301'),
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_0.3-0.1'),
     tar_read(res_eqm_c04r01_extra) %>% 
-      select(it, {{variavel}}) %>% mutate(model = 'eqm0401'),
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_0.4-0.1'),
     tar_read(res_eqm_c05r01_extra) %>% 
-      select(it, {{variavel}}) %>% mutate(model = 'eqm0501')
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_0.5-0.1'),
+    
+    tar_read(res_eqm_et_c01r01_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.1-0.1'),
+    tar_read(res_eqm_et_c01r02_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.1-0.2'),
+    tar_read(res_eqm_et_c01r03_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.1-0.3'),
+    tar_read(res_eqm_et_c01r04_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.1-0.4'),
+    tar_read(res_eqm_et_c01r05_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.1-0.5'),
+    tar_read(res_eqm_et_c02r01_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.2-0.1'),
+    tar_read(res_eqm_et_c03r01_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.3-0.1'),
+    tar_read(res_eqm_et_c04r01_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.4-0.1'),
+    tar_read(res_eqm_et_c05r01_extra) %>% 
+      select(it, {{variavel}}) %>% mutate(model = 'EQM_ET_0.5-0.1')#,
+    
+    # tar_read(res_eqm_am_c01r01_extra) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0101'),
+    # tar_read(res_eqm_am_c01r02_extra) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0102'),
+    # tar_read(res_eqm_am_c01r03_extra) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0103'),
+    # tar_read(res_eqm_am_c01r04_extra) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0104'),
+    # tar_read(res_eqm_am_c01r05_extra) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0105'),
+    # tar_read(res_eqm_am_c02r01_extra) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0201'),
+    # tar_read(res_eqm_am_c03r01_extra) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0301'),
+    # tar_read(res_eqm_am_c04r01_extra) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0401'),
+    # tar_read(res_eqm_am_c05r01_extra) %>% 
+    #   select(it, {{variavel}}) %>% mutate(model = 'eqm_am_0501')
     )
   
-  plot <- ggplot(data, aes(x = {{variavel}}, y = model, fill = stat(x))) + 
+  plot <- ggplot(data, aes(x = {{variavel}}, y = model
+                           #, fill = stat(x)
+                           )) + 
   #geom_density_ridges(fill = "#00AFBB", rel_min_height = 0.01) +
-  geom_density_ridges_gradient(scale = 3, size = 0.3, rel_min_height = 0.01) +
-  scale_fill_viridis_c(name = "", option = "E") +
+     geom_density_ridges(scale = 5, alpha = 0.4) +
+  # geom_density_ridges_gradient(scale = 3, size = 0.3, rel_min_height = 0.01) +
+  # scale_fill_viridis_c(name = "", option = "E") +
   theme(legend.position = 'none')
   
   return(list(data = data,
@@ -150,18 +231,26 @@ Também foram gerados dados demográficos e imunológicos para um conjunto de 28
 Os conjuntos de dados foram gerados com o _package_ {simK}^[available from: https://github.com/txopen/simK]:
 
 ```
-cndts <- simK::candidates_df(n = 2000, 
-                          replace = TRUE,
-                          origin = 'PT',
-                          probs.abo = c(0.43, 0.03, 0.08, 0.46),
-                          probs.cpra = c(0.7, 0.1, 0.1, 0.1),
-                          lower=18, upper=75,
-                          mean = 45, sd = 15,
-                          prob.dm = 0.12,
-                          prob.urgent = 0,
-                          uk = FALSE,
-                          seed.number = 3) |>
-          dplyr::select(ID, bg, A1, A2, B1, B2, DR1, DR2, age, dialysis, cPRA, urgent)
+cndts <- simK::candidates_df(n = 2000,
+                        replace = TRUE,
+                        origin = 'PT',
+                        probs.abo = c(0.44, 0.022, 0.042, 0.496),
+                        probs.cpra = c(0.7, 0.1, 0.1, 0.1),
+                        lower=18, upper=75,
+                        mean.age = 45, sd.age = 15,
+                        prob.dm = 0.12,
+                        prob.urgent = 0,
+                        uk = FALSE,
+                        seed.number = 3) |>
+      dplyr::mutate(dialysis = purrr::map2_dbl(.x = bg,
+                                               .y = hiper,
+                                               ~simK::dial(hiper = .y, bg = .x,
+                                                           mean.dial1 = 25,
+                                                           mean.dial2 = 60,
+                                                           mean.dial3 = 75,
+                                                           sd.dial = 20,
+                                                           seed.number = NA)))|>
+      dplyr::select(ID, bg, A1, A2, B1, B2, DR1, DR2, age, dialysis, cPRA, urgent)
           
 antbs <- simK::Abs_df(candidates = cds,
                     origin = 'PT',
@@ -172,18 +261,19 @@ dnrs <- simK::donors_df(n = 280,
                       origin = 'PT',
                       probs = c(0.4658, 0.0343, 0.077, 0.4229),
                       lower=18, upper=75,
-                      mean = 60, sd = 12,
+                      mean.age = 60, sd.age = 20,
                       uk = FALSE,
-                      seed.number = 3)
+                      seed.number = 44)
+                      
 ```
 
 ### Descrição
 
 Foram usados os algoritmos de alocação `lima()`, `et()` e `eqm()` disponíveis através do _package_ {histoc}^[available from: https://github.com/txopen/histoc].
 
-Resumidamente, no modelo **Lima** os candidatos a transplante são classificados em cores de prioridade tendo em conta o respectivo tempo de diálise e o valor de cPRA: laranja para os doentes com cPRA > 85% ou tempo de diálise > 3º quartil; amarelo para os doentes com cPRa > 50% ou tempo de diálise > mediana; e verdes todos os restantes. Os candidatos são ainda inicialmente distribuidos tendo em conta o Senior Program (SP), ou seja, dadores >= 65 anos são alocados prioritáriamente a doentes >= 65 anos e dadores < 65 anos são alocados prioritáriamente a doentes < 65 (_Senior Program_).
+Resumidamente, no modelo **Lima** os candidatos a transplante são classificados em cores de prioridade tendo em conta o respectivo tempo de diálise e o valor de cPRA: laranja para os doentes com cPRA > 85% ou tempo de diálise > 3º quartil; amarelo para os doentes com cPRa > 50% ou tempo de diálise > mediana; e verdes todos os restantes. Os candidatos são ainda inicialmente distribuidos tendo em conta o _Senior Program_ (SP), ou seja, dadores >= 65 anos são alocados prioritáriamente a doentes >= 65 anos e dadores < 65 anos são alocados prioritáriamente a doentes < 65 (_Senior Program_).
 
-O modelo do EuroTransplant **ET** aplica inicialmente o SP e o programa Acceptable Missmatch (AM) em que é dada prioridade aos candidatos hipersensibilizados. Na seleção do ET são priooriizados também os pares dador-receptor com mmHLA 000, depois a ordenação dos candidatos segue um sistema de pontuação para a alocação dos órgãos. 
+O modelo do EuroTransplant **ET** aplica inicialmente o SP e o programa _Acceptable Missmatch_ (AM) em que é dada prioridade aos candidatos hipersensibilizados. Na seleção do ET são priorizados também os pares dador-receptor com mmHLA 000, depois a ordenação dos candidatos segue um sistema de pontuação para a alocação dos órgãos. 
 
 Nos modelos de **matriz de equidade** são considerados como critérios de utilidade os mmHLA e o matching de longevidade. Para os critérios de justiça são considerados a mediana e o 3º quartil do tempo de diálise bem como os respectivos valores de cPRA, tal como descrito no separador ['EQM'](#eqm).
 
@@ -199,6 +289,30 @@ Para a construção das matrizes de equidade testadas, foi assumido um valor má
 + eqm0401: `uj_matx(max.val = 100, ratio.util = 0.4, ratio.just = 0.1)`
 + eqm0501: `uj_matx(max.val = 100, ratio.util = 0.5, ratio.just = 0.1)`
  
+Foram considerados também modelos obtidos através destas matrizes mas aplicando inicialmente os critérios de priorização do ET, isto é, programas SP, AM e mmHLA 000 (`eqm(SP = TRUE, AM = TRUE, mm000 = TRUE)`):
+
++ eqm_et_0101
++ eqm_et_0102
++ eqm_et_0103
++ eqm_et_0104
++ eqm_et_0105
++ eqm_et_0201
++ eqm_et_0301
++ eqm_et_0401
++ eqm_et_0501
+
+Os modelos das matrizes de equidade foram ainda replicados com a priorização do programa AM (`eqm(SP = TRUE, AM = TRUE, mm000 = TRUE)`):
+
++ eqm_am_0101
++ eqm_am_0102
++ eqm_am_0103
++ eqm_am_0104
++ eqm_am_0105
++ eqm_am_0201
++ eqm_am_0301
++ eqm_am_0401
++ eqm_am_0501
+
 Nesta análise e para todos os modelos foi considerado como 3º quartil do tempo de diálise 80 meses e como mediana 60 meses.
 
 A alocação dos 280 dadores é feita selecionando os dois melhores candidatos para cada dador sem repetir os candidatos. Isto é, em cada iteração, para o primeiro dador são atribuidos os dois melhores candidatos (garantindo sempre a compatibilidade ABO e um XM virtual negativo), ao segundo dador são atribuidos os 2 melhores candidatos sobrantes (sem os atribuidos a dadores anteriores) e assim sucessivamente até serem atribuidos um máximo de 560 candidatos (2 x 280). Para garantir que a ordenação dos dadores não influencia os resultados, foram feitas até 1000 iterações em que para cada uma das iterações a ordem dos dadores para os quais são atribuidos os candidatos é alterada aleatoriamente.
@@ -263,7 +377,7 @@ Assim, temos uma matriz de equidade final com 36 (6x6) valores.
 Por exemplo, para um `ratio.util = 0.1` e `ratio.just = 0.1`, obtemos a matriz de equidade:  
 
 ```{r, out.width="75%"}
-matx_data_u01_j01 <- mtx_data_uj(u = 0.1, j = 0.1)
+matx_data_u01_j01 <- mtx_data_uj(u = 0.5, j = 0.1)
 gg_matx(data = matx_data_u01_j01)
 
 ```
@@ -284,11 +398,11 @@ gg_matx(data = matx_data_u01_j04)
 
 ## Resultados
 
-A comparação dos valores médios das caracteisticas dos receptores obtidos para cada iteração e para cada modelo de alocação é feito através da representação gráfica das suas distribuições.
+A comparação dos valores médios das caracteristicas dos receptores obtidos para cada iteração e para cada modelo de alocação é feito através da representação gráfica das suas distribuições.
 
 ### Idade
 
-As matrizes que dão maior peso à utilidade (eqm0201, eqm0301, eqm0401 e eqm0501) são as que selecionam candidatos mais idosos, ou melhor, candidatos com idades mais próximas aos dadores. Neste exercício as idades dos dadores foram obtidas a partir duma distribuição $\sim N(60,12)$ pelo que é o modelo 'eqm0501' que seleciona candidatos com as idades mais próximas às dos dadores. No caso do modelo 'Lima' como a idade de candidatos e dadores apenas é considerada para aplicação do _Senior program_, os receptores selecionados não são tão influenciados pelas idades dos dadores. 
+As matrizes que dão maior peso à utilidade (eqm0201, eqm0301, eqm0401 e eqm0501) são as que selecionam candidatos mais idosos, ou melhor, candidatos com idades mais próximas aos dadores. Neste exercício as idades dos dadores foram obtidas a partir duma distribuição $\sim N(60,12)$ pelo que é o modelo 'eqm0501' que seleciona candidatos com as idades mais próximas às dos dadores. No caso dos modelos 'Lima' e 'ET' como a idade de candidatos e dadores apenas é considerada para aplicação do _Senior program_, os receptores selecionados não são tão influenciados pelas idades dos dadores. 
 
 ```{r, out.width="70%"}
 res_age <- res_modelos(variavel = age_avg)
@@ -300,100 +414,103 @@ res_age$plot
 ### Diferença de idades   
 (|idade dador - idade receptor|)
 
-Tal como referido em cima, as matrizes que dão maior peso á utilidade selecionam receptores com idades mais próximas aos dadores, ou seja, com uma diferença de idades entre dador e receptor menor.  
+Tal como referido em cima, as matrizes que dão maior peso à utilidade selecionam receptores com idades mais próximas aos dadores, ou seja, com uma diferença de idades entre dador e receptor menor.  
+
+No caso das matrizes que aplicam as prioridades ET (eqm_et_), mesmo aqs que dão maior peso à utilidade (eqm_et_0501 - eqm_et_0201) as diferenças de idades são maiores mesmo que a verificada para eqm0101 dada a influencia do SP.
 
 ```{r, out.width="70%"}
 res_ageDiff <- res_modelos_extra(variavel = ageDiff_avg)
 
-res_ageDiff$plot
+res_ageDiff$plot + xlab("age differences") 
+  
 
 ```
 
 ### mmHLA
 
-Para o valor médio do número de mmHLA entre dador e receptor, são as matrizes que dão maior peso à utilidade as que selecionam pares com o menor número de mmHLA (como seria de esperar). Mesmo a matriz mais neutra (eqm0101) seleciona receptores com menos mmHLA que o modelo Lima.
+Para o valor médio do número de mmHLA entre dador e receptor, são as matrizes que dão maior peso à utilidade as que selecionam pares com o menor número de mmHLA (como seria de esperar). Mesmo a matriz mais neutra (eqm0101) seleciona receptores com menos mmHLA que os modelos 'Lima', 'ET' e os que resultam das 'eqm_et_'. Ou seja as priorizações do SP e AM condicionam os valores globais de mmHLA.
 
 ```{r, out.width="70%"}
 res_mmHLA <- res_modelos(variavel = mmHLA_avg)
 
-res_mmHLA$plot
+res_mmHLA$plot + xlab("recipients' HLA mismatchs") 
 
 ```
 
 ### mmHLA 000 (contagem)
 
-Embora as matrizes que dão mais peso á utilidade selecionem mais receptores com zero mmHLA, este número não difere muito do obtido com o modelo Lima, uma vez que o número de mmHLA total apenas é usado na ordenação final em ambos os modelos. 
+Embora as matrizes que dão mais peso á utilidade selecionem mais receptores com zero mmHLA, este número não difere muito do obtido com o modelo 'Lima', uma vez que o número de mmHLA total apenas é usado na ordenação final em ambos os modelos. São os modelos 'ET' e  'eqm_et_' que selecionam um maior número de pares com 0 mmHLA uma vez que este é um critério de seleção dos pares. 
 
 ```{r, out.width="70%"}
 res_mmHLA0 <- res_modelos(variavel = mmHLA0_n)
 
-res_mmHLA0$plot
+res_mmHLA0$plot + xlab("number of recipients with 0 HLA mismatchs") 
 
 ```
 
 ### mmHLA 0-2 (contagem)
 
-Já o número de receptores com até 2 mmHLA é bastante superior na selecção das matrizes que dão maior peso à utilidade e na matriz neutra (eqm0101) em comparação com os receptores do modelo Lima.
+Já o número de receptores com até 2 mmHLA é bastante superior na selecção das matrizes que dão maior peso à utilidade e na matriz neutra (eqm0101) em comparação com os receptores dos modelos 'Lima', 'ET' e todos os 'eqm_et_' mesmo quando é dado um maior peso à utilidade.
 
 ```{r, out.width="70%"}
 res_mmHLA02 <- res_modelos_extra(variavel = mmHLA02_n)
 
-res_mmHLA02$plot
+res_mmHLA02$plot + xlab("number of recipients with 0 to 2 HLA mismatchs") 
 
 ```
 
 ### mmHLA 6 (contagem)
 
-No mesmo sentido, as matrizes que dão maior peso à utilidade selecionam menos receptores com 6 mmHLA.
+No mesmo sentido, as matrizes (sem priorizações) que dão maior peso à utilidade selecionam menos receptores com 6 mmHLA.
 
 ```{r, out.width="70%"}
 res_mmHLA6 <- res_modelos(variavel = mmHLA6_n)
 
-res_mmHLA6$plot
+res_mmHLA6$plot + xlab("number of recipients with 6 HLA mismatchs") 
 
 ```
 
 ### tempo em diálise (meses)
 
-Como expectável, as matrizes que dão maior peso à justiça (eqm0102, eqm0103, eqm0104, eqm0105) selecionam receptores com maiores tempos em diálise do que o modelo Lima. Ainda assim o modelo Lima ainda consegue seleccionar receptores com maior tempo de diálise que o modelo neutro (eqm0101). 
+Como expectável, as matrizes que dão maior peso à justiça (eqm0102, eqm0103, eqm0104, eqm0105) selecionam receptores com maiores tempos em diálise do que o modelo 'Lima'. Ainda assim o modelo 'Lima' ainda consegue seleccionar receptores com maior tempo de diálise que o modelo neutro (eqm0101). O modelo 'ET' e os 'eqm_et_' selecionam candidados com menor tempo de diálise do que o modelo neutro 'eqm0101'. 
 
 ```{r, out.width="70%"}
 res_dialysis <- res_modelos(variavel = dialysis_avg)
 
-res_dialysis$plot
+res_dialysis$plot + xlab("recipients' time on dialysis (months)") 
 
 ```
 
 ### cPRA (%)
 
-As matrizes que dão amior peso à justiça (por definição) tendem a seleccionar os receptores com valores mais altos de cPRA, sendo que a matriz eqm0102 devolve resultados muito próximos aos obtidos com o modelo Lima. 
+As matrizes que dão maior peso à justiça (por definição) tendem a seleccionar os receptores com valores mais altos de cPRA, sendo que a matriz eqm0102 devolve resultados muito próximos aos obtidos com o modelo 'Lima'. Também os modelos que aplicam as priorizações ET selecionam os candidatos com valores mais altos de cPRA resultado do programa AM.
 
 ```{r, out.width="70%"}
 res_cPRA <- res_modelos(variavel = cPRA_avg)
 
-res_cPRA$plot
+res_cPRA$plot + xlab("recipients' cPRA (%)") 
 
 ```
 
 ### Hipersensibilizados (contagem)
 
-Qaundo analizamos a contagem de receptores hipersensibilizados, obtemos resultados semelhantes aos descritos para os valores de cPRA.
+Da aplicação do programa AM resulta que os modelos 'ET' e 'eqm_et_' têm os mesmos resultados para o número de de receptores hipersensibilizados, obtemos resultados semelhantes aos descritos para os valores de cPRA. O modelo 'Lima' seleciona um número semelhante ao modelo 'eqm0102' e superior ao de 'eqm0101'
 
 ```{r, out.width="70%"}
 res_HI <- res_modelos(variavel = HI_n)
 
-res_HI$plot
+res_HI$plot + xlab("number of hipersensitized recipients") 
 
 ```
 
 ### Senior program (contagem)
 
-Como um dos critérios do modelo Lima é a aplicação das regras do _Senior program_ (dadores maiores que 65 anos são alocados prioritariamente a candidatos 65+), o número de receptores 65+ com dadores 65+ é bastante superior no modelo Lima quando comparado com os resultados das matrizes.
+Como um dos critérios dos modelo 'Lima', 'ET' e 'eqm_et_' aplicam as regrasas regras do _Senior program_ (dadores maiores que 65 anos são alocados prioritariamente a candidatos 65+), o número de receptores 65+ com dadores 65+ é bastante superior nestes quando comparados aos resultados das matrizes sem priorização.
 
 ```{r, out.width="70%"}
 res_SP <- res_modelos(variavel = SP_n)
 
-res_SP$plot
+res_SP$plot + xlab("number of recipients transplanted with SP") 
 
 ```
 
@@ -402,53 +519,256 @@ res_SP$plot
 
 O cálculo do TxScore^[available from: https://balima.shinyapps.io/scoreTx/] que devolve a percentagem (probabilidade) a 5 anos do evento (morte ou perda do enxerto) foi feito tendo em conta a idade do dador, a idade do receptor, o tempo de diálise e os mmHLA. Para todas as restantes variáveis usadas para o cálculo do TxScore, foram assumidos valores constantes. 
 
-Assim, os piores valores são obtidos para o modelo Lima, enquanto que os melhores resultados são dados pelas matrizes que dão maior peso á utilidade.  
+Assim, os piores valores são obtidos para o modelo 'Lima', enquanto que os melhores resultados são dados pelas matrizes que dão maior peso á utilidade e ao modelo ET.  
 
 ```{r, out.width="70%"}
 res_txs <- res_modelos_extra(variavel = txs_avg)
 
-res_txs$plot
+res_txs$plot + xlab("recipients' TxScore (%)") 
 
 ```
 
 ### Resumo
 
+Para cada variável analisada foi identificada a ordem dos melhores modelos considerando apenas 'Lima', 'ET', 'eqm0101' e 'eqm_et_0101'. Os modelos 'ET' e 'EQM0101' foram selecionados mais vezes como os melhores. 
+
+Se compararmos apenas o modelo 'ET' com o 'eqm0101' verificamos que o primeiro foi selecionado 5 vezes como sendo melhor que o segundo e outras 5 vezes como sendo pior.
+
+Os resultados de cPRA e HI são redundantes uma vez que a variável HI é obtida a partir de cPRA > 85%.  
+
+Os (ligeiramente) melhores resultados do modelo 'ET' para a variável 'TxScore' podem dever-se ao facto deste modelo selecionar candidatos mais jovens e com menor tempo de diálise. 
+
+#### Rank dos modelos
+
 ```{r}
 tab_resumo <- tribble(
-  ~VAR, ~lima, ~ET, ~eqm0101, ~best_model,
-  'ageDiff', 2,3,1,'eqm0501',
-  'mmHLA',2,3,1,'eqm0105',
-  'mmHLA000',2,1,3,'ET',
-  'mmHLA0-2',2,3,1,'eqm0501',
-  'mmHLA6',2,3,1,'eqm0501',
-  'tmDial',1,3,2,'eqm0105',
-  'cPRA',2,1,3,'eqm0105',
-  'Hiper',2,1,3,'ET',
-  'SP',1,1,3,'ET',
-  'TxScore',3,1,2,'eqm0501'
+  ~variable, ~Lima, ~ET, ~`EQM_0.1-0.1`, ~`EQM_ET_0.1-0.1`, ~best_model,
+  'age differences', 3,4,1,2,'EQM_0.5-0.1',
+  'mean mmHLA',2,3,1,3,'EQM_0.5-0.1',
+  'number of mmHLA000',3,1,4,1,'EQM_ET_',
+  'number of mmHLA0-2',2,4,1,3,'EQM_0.5-0.1',
+  'number of mmHLA6',2,4,1,3,'EQM_0.5-0.1',
+  'time on dialysis',2,3,1,4,'EQM_0.1-0.5',
+  'cPRA (%)',4,1,3,1,'EQM_ET_0.1-0.5',
+  'Hipersensitized recipients',3,1,4,2,'ET',
+  'transplants with Senior Program',1,1,4,1,'ET',
+  'TxScore (%)',4,1,2,2,'ET'
   )
 
 library(kableExtra)
 
-tab_resumo$lima = cell_spec(
-  tab_resumo$lima, #color = "white", 
-  align = "c", 
-  background = factor(tab_resumo$lima, c(1, 2, 3),
-                      c("green", "yellow", "red")))
+tab_resumo$Lima = cell_spec(
+  tab_resumo$Lima, #color = "white", 
+  align = "justify", 
+  background = factor(tab_resumo$Lima, c(1, 2, 3, 4),
+                      c("green", "yellow", "orange","red")))
 tab_resumo$ET = cell_spec(
   tab_resumo$ET, #color = "white", 
-  align = "c", 
-  background = factor(tab_resumo$ET, c(1, 2, 3),
-                      c("green", "yellow", "red")))
+  align = "justify", 
+  background = factor(tab_resumo$ET, c(1, 2, 3, 4),
+                      c("green", "yellow", "orange","red")))
 
-tab_resumo$eqm0101 = cell_spec(
-  tab_resumo$eqm0101, #color = "white", 
-  align = "c", 
-  background = factor(tab_resumo$eqm0101, c(1, 2, 3),
-                      c("green", "yellow", "red")))
+tab_resumo$`EQM_0.1-0.1` = cell_spec(
+  tab_resumo$`EQM_0.1-0.1`, #color = "white", 
+  align = "justify", 
+  background = factor(tab_resumo$`EQM_0.1-0.1`, c(1, 2, 3, 4),
+                      c("green", "yellow", "orange","red")))
 
-kbl(tab_resumo, escape = F) %>%
+tab_resumo$`EQM_ET_0.1-0.1` = cell_spec(
+  tab_resumo$`EQM_ET_0.1-0.1`, #color = "white", 
+  align = "justify", 
+  background = factor(tab_resumo$`EQM_ET_0.1-0.1`, c(1, 2, 3, 4),
+                      c("green", "yellow", "orange","red")))
+
+kbl(tab_resumo, escape = F,
+    caption = "Models' performance ranked by variable") %>%
   kable_paper("striped", full_width = F)
+
+```
+
+O TxScore, ao dar a probabilidade dum evento (morte ou perda do rim) a 5 anos, mede a eficácia do transplante e não a sua eficiência. Neste exercício, os dadores têm uma média de idades de 60 anos, enquanto a média de idades dos candidtos é de 45. Assim, é expectável que através do modelo 'ET' órgãos de dadores mais idosos sejam alocados a candidatos mais jovens o que não acontece com o modelo 'eqm0101' que tem como um dos critérios a proximidade de idades entre dador e receptor. 
+
+O transplante de receptores mais jovens com rins dum dador mais idoso traduzir-se-á numa redução dos valores do TxScore quando comparado com o transplante deste dador com um receptor mais idoso, no entanto poderá implicar a necessidade dos primeiros receptores voltarem à lista de espera para um novo transplante o que poderia não acontecer no caso de ser seleccionado um receptor mais idoso.
+
+#### Descriptiva
+
+```{r}
+tab_res <- res_modelos(age_avg) %>% .$data %>%
+  left_join(res_modelos_extra(variavel = ageDiff_avg) %>% .$data) %>%
+  left_join(res_modelos(mmHLA_avg) %>% .$data) %>%
+  left_join(res_modelos(variavel = mmHLA0_n) %>% .$data) %>%
+  left_join(res_modelos_extra(variavel = mmHLA02_n) %>% .$data) %>%
+  left_join(res_modelos(variavel = mmHLA6_n) %>% .$data) %>%
+  left_join(res_modelos(variavel = dialysis_avg) %>% .$data) %>%
+  left_join(res_modelos(variavel = cPRA_avg) %>% .$data) %>%
+  left_join(res_modelos(variavel = HI_n) %>% .$data) %>%
+  left_join(res_modelos(variavel = SP_n) %>% .$data) %>%
+  left_join(res_modelos_extra(variavel = txs_avg) %>% .$data)
+
+tab_res %>%
+  select(-it) %>%
+  filter(model %in% c('Lima', 'ET', 'EQM_0.1-0.1', 'EQM_ET_0.1-0.1')) %>%
+  gtsummary::tbl_summary(by = model,
+                         statistic = c(age_avg, ageDiff_avg, mmHLA_avg,
+                                       mmHLA0_n, mmHLA02_n,
+                                       mmHLA6_n, dialysis_avg,cPRA_avg,
+                                       HI_n, SP_n, txs_avg
+                                       ) ~ "{mean} (+/- {sd})",
+                         digits = c(age_avg, ageDiff_avg, mmHLA_avg,
+                                    mmHLA0_n, mmHLA02_n,
+                                    mmHLA6_n, dialysis_avg,cPRA_avg,
+                                    HI_n, SP_n, txs_avg) ~ 2,
+                         label = list(age_avg ~ "recipients' age",
+                                      ageDiff_avg ~ "age differences |donor-recipient|",
+                                      mmHLA_avg ~ "number of HLA mm",
+                                      mmHLA0_n ~ "pairs' with 0 HLA mm",
+                                      mmHLA02_n ~ "pairs' with 0 to 2 HLA mm",
+                                      mmHLA6_n ~ "pairs' with 6 HLA mm",
+                                      dialysis_avg ~ "time on dialysis",
+                                      cPRA_avg ~ "cPRA",
+                                      HI_n ~ "Hipersensitized recipients",
+                                      SP_n ~ "transplants with Senior Program",
+                                      txs_avg ~ "TxScore (%)"),
+                         ) %>%
+  gtsummary::modify_header(label ~ "**Variable**") %>%
+  gtsummary::modify_caption("**Table. Summary statistics by model from 1,0000 iterations**")
+```
+
+#### effect size
+
+```{r}
+library(psych)
+
+tab_et_lima <- tar_read(res_et) %>% 
+  left_join(tar_read(res_et_extra)) %>% 
+  select(-it, -starts_with('data')) %>% 
+  mutate(model = 'ET') %>% 
+  bind_rows(tar_read(res_lima) %>% 
+              left_join(tar_read(res_lima_extra)) %>% 
+              select(-it, -starts_with('data')) %>%
+              mutate(model = 'Lima')) %>% 
+  mutate(model = ifelse(model == 'ET', 1, 2))
+
+res_et_lima <- psych::cohen.d(as.data.frame(tab_et_lima), 'model')
+
+cd_et_lima <- res_et_lima$cohen.d %>% round(digits = 3) %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = 'variables') %>%
+  filter(variables %in% c('age_avg', 'ageDiff_avg', 'mmHLA_avg',
+                          'mmHLA0_n', 'mmHLA02_n', 'mmHLA6_n', 
+                          'dialysis_avg','cPRA_avg',
+                          'HI_n', 'SP_n', 'txs_avg')) 
+# cd_et_lima %>%  
+#   kable(caption = "Cohen’s d effect size for the difference of means from ET vs Lima") %>% 
+#   kable_paper("striped", full_width = F)
+
+
+```
+ 
+<!--  p-values: -->
+
+<!-- ```{r} -->
+
+<!-- p_et_lima <- res_et_lima$p[c('age_avg', 'ageDiff_avg', 'mmHLA_avg', -->
+<!--                           'mmHLA0_n', 'mmHLA02_n', 'mmHLA6_n',  -->
+<!--                           'dialysis_avg','cPRA_avg', -->
+<!--                           'HI_n', 'SP_n', 'txs_avg')] -->
+
+<!-- p_et_lima -->
+<!-- ``` -->
+
+ 
+```{r}
+tab_et_eqm0101 <- tar_read(res_et) %>% 
+  left_join(tar_read(res_et_extra)) %>% 
+  select(-it, -starts_with('data')) %>% 
+  mutate(model = 'ET') %>% 
+  bind_rows(tar_read(res_eqm_c01r01) %>% 
+              left_join(tar_read(res_eqm_c01r01_extra)) %>% 
+              select(-it, -starts_with('data')) %>%
+              mutate(model = 'EQM_0.1-0.1')) %>% 
+  mutate(model = ifelse(model == 'ET', 1, 2))
+
+res_et_eqm0101 <- psych::cohen.d(as.data.frame(tab_et_eqm0101), 'model')
+
+cd_et_eqm0101 <- res_et_eqm0101$cohen.d %>% round(digits = 3) %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = 'variables') %>%
+  filter(variables %in% c('age_avg', 'ageDiff_avg', 'mmHLA_avg',
+                          'mmHLA0_n', 'mmHLA02_n', 'mmHLA6_n', 
+                          'dialysis_avg','cPRA_avg',
+                          'HI_n', 'SP_n', 'txs_avg')) 
+
+# cd_et_eqm0101 %>%  
+#   kable(caption = "Cohen’s d effect size for the difference of means from ET vs EQM_0.1-0.1") %>% 
+#   kable_paper("striped", full_width = F)
+```
+ 
+<!--  p-values: -->
+
+<!-- ```{r} -->
+
+<!-- p_et_eqm0101 <- res_et_eqm0101$p[c('age_avg', 'ageDiff_avg', 'mmHLA_avg', -->
+<!--                           'mmHLA0_n', 'mmHLA02_n', 'mmHLA6_n',  -->
+<!--                           'dialysis_avg','cPRA_avg', -->
+<!--                           'HI_n', 'SP_n', 'txs_avg')] -->
+
+<!-- p_et_eqm0101 -->
+<!-- ``` -->
+
+ 
+ 
+```{r}
+tab_et_eqm_et_0101 <- tar_read(res_et) %>% 
+  left_join(tar_read(res_et_extra)) %>% 
+  select(-it, -starts_with('data')) %>% 
+  mutate(model = 'ET') %>% 
+  bind_rows(tar_read(res_eqm_et_c01r01) %>% 
+              left_join(tar_read(res_eqm_et_c01r01_extra)) %>% 
+              select(-it, -starts_with('data')) %>%
+              mutate(model = 'EQM_ET_0.1-0.1')) %>% 
+  mutate(model = ifelse(model == 'ET', 1, 2))
+
+res_et_eqm_et_0101 <- psych::cohen.d(as.data.frame(tab_et_eqm_et_0101), 'model')
+
+cd_et_eqm_et_0101 <- res_et_eqm_et_0101$cohen.d %>% round(digits = 3) %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = 'variables') %>%
+  filter(variables %in% c('age_avg', 'ageDiff_avg', 'mmHLA_avg',
+                          'mmHLA0_n', 'mmHLA02_n', 'mmHLA6_n', 
+                          'dialysis_avg','cPRA_avg',
+                          'HI_n', 'SP_n', 'txs_avg')) 
+# cd_et_eqm_et_0101 %>%  
+#   kable(caption = "Cohen’s d effect size for the difference of means from ET vs EQM_ET_0.1-0.1") %>% 
+#   kable_paper("striped", full_width = F)
+```
+
+<!--  p-values: -->
+
+<!-- ```{r} -->
+
+<!-- p_et_eqm_et_0101 <- res_et_eqm_et_0101$p[c('age_avg', 'ageDiff_avg', 'mmHLA_avg', -->
+<!--                           'mmHLA0_n', 'mmHLA02_n', 'mmHLA6_n',  -->
+<!--                           'dialysis_avg','cPRA_avg', -->
+<!--                           'HI_n', 'SP_n', 'txs_avg')] -->
+
+<!-- p_et_eqm_et_0101 -->
+<!-- ``` -->
+
+
+```{r}
+cd_et_lima %>% 
+  select(variables, effect) %>% 
+  rename(ETvsLima = effect) %>%
+  left_join(cd_et_eqm0101 %>%
+              select(variables, effect) %>%
+              rename(`ETvsEQM_0.1-0.1` = effect)) %>% 
+  left_join(cd_et_eqm_et_0101 %>%
+              select(variables, effect) %>%
+              rename(`ETvsEQM_ET_0.1-0.1` = effect)) %>% 
+  kable(caption = "Cohen’s d effect size for the difference of means between pairs of models") %>% 
+  kable_paper("striped", full_width = F)
+  
 
 ```
 
